@@ -1,0 +1,92 @@
+﻿@model PersonalFinanceManager.Shared.Models.Transaction
+
+<div class="row mb-3">
+    <div class="col">
+        <h2 class="text-primary">Sửa giao dịch</h2>
+    </div>
+</div>
+
+@if (!ViewData.ModelState.IsValid && ViewData.ModelState[""].Errors.Any())
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @ViewData.ModelState[""].Errors.FirstOrDefault()?.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="EditTransaction" method="post" class="needs-validation" novalidate>
+            <input type="hidden" asp-for="TransactionId" />
+            <div class="mb-3">
+                <label asp-for="TransactionTime" class="form-label">Ngày giao dịch</label>
+                <div class="input-group">
+                    <input asp-for="TransactionTime" class="form-control datetimepicker" required />
+                    <span class="input-group-text">
+                        <i class="bi bi-calendar"></i>
+                    </span>
+                </div>
+                <div class="invalid-feedback">Vui lòng chọn ngày giao dịch.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Amount" class="form-label">Số tiền (VND)</label>
+                <input asp-for="Amount" class="form-control" required type="number" step="1" placeholder="VD: 500000" />
+                <div class="invalid-feedback">Vui lòng nhập số tiền (chỉ nhập số, không cần VND).</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="SourceAccount" class="form-label">Người gửi/Tài khoản nguồn</label>
+                <input asp-for="SourceAccount" class="form-control" placeholder="VD: Nguyen Van A" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RecipientAccount" class="form-label">Tài khoản người hưởng</label>
+                <input asp-for="RecipientAccount" class="form-control" placeholder="VD: Your VCB Account" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RecipientName" class="form-label">Tên người hưởng</label>
+                <input asp-for="RecipientName" class="form-control" placeholder="VD: You" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RecipientBank" class="form-label">Tên ngân hàng hưởng</label>
+                <input asp-for="RecipientBank" class="form-control" placeholder="VD: Vietcombank" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Nội dung</label>
+                <input asp-for="Description" class="form-control" placeholder="VD: Lương tháng 4" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Category" class="form-label">Loại giao dịch</label>
+                <input asp-for="Category" class="form-control" readonly />
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr(".datetimepicker", {
+                enableTime: true,
+                dateFormat: "d/m/Y H:i",
+                time_24hr: true,
+                minuteIncrement: 1,
+                defaultDate: "@Model.TransactionTime.ToString("dd/MM/yyyy HH:mm")" // Giá trị ban đầu
+            });
+
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+    </script>
+}

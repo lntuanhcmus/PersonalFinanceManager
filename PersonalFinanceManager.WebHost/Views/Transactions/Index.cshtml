@@ -1,0 +1,173 @@
+﻿@using System.Globalization
+@model PersonalFinanceManager.WebHost.Models.TransactionsViewModel
+@using X.PagedList.Mvc.Core
+@using X.PagedList.Extensions
+
+<div class="row mb-3">
+    <div class="col">
+        <h2 class="text-primary">Danh sách giao dịch</h2>
+    </div>
+    <div class="col text-end">
+        <a href="@Url.Action("AddReceivedTransaction")" class="btn btn-success me-2">
+            <i class="bi bi-plus-circle"></i> Thêm giao dịch
+        </a>
+        <a href="@Url.Action("RefreshFromGmail")" class="btn btn-info text-white">
+            <i class="bi bi-arrow-clockwise"></i> Lấy từ Gmail
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Form tìm kiếm nằm ngang -->
+<div class="row mb-3">
+    <div class="col">
+        <form asp-action="Index" method="get" class="d-flex flex-wrap align-items-end">
+            <div class="form-group me-2 mb-2">
+                <label for="transactionId" class="form-label">Mã GD:</label>
+                <input type="text" id="transactionId" name="transactionId" value="@Model.TransactionId" class="form-control form-control-sm" />
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="startDate" class="form-label">Từ ngày:</label>
+                <input type="date" id="startDate" name="startDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="endDate" class="form-label">Đến ngày:</label>
+                <input type="date" id="endDate" name="endDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="minAmount" class="form-label">Số tiền từ:</label>
+                <input type="number" id="minAmount" name="minAmount" value="@Model.MinAmount" class="form-control form-control-sm" step="any" />
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="maxAmount" class="form-label">Đến:</label>
+                <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control form-control-sm" step="any" />
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="category" class="form-label">Danh mục:</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="">Chọn danh mục</option>
+                    <option value="Nhận">Nhận</option>
+                    <option value="Chi">Chi</option>
+                </select>
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="sourceAccount" class="form-label">TK nguồn:</label>
+                <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control form-control-sm" />
+            </div>
+            <div class="form-group me-2 mb-2">
+                <label for="content" class="form-label">Nội dung</label>
+                <input type="text" id="content" name="content" value="@Model.Content" class="form-control form-control-sm" />
+            </div>
+            <div class="form-group mb-2 d-flex align-items-center">
+                <button type="submit" class="btn btn-primary btn-sm">Tìm kiếm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>STT</th>
+                        <th>Thời gian giao dịch</th>
+                        <th>Số lệnh giao dịch</th>
+                        <th>Tài khoản nguồn</th>
+                        <th>Tài khoản người hưởng</th>
+                        <th>Tên người hưởng</th>
+                        <th>Tên ngân hàng hưởng</th>
+                        <th>Số tiền</th>
+                        <th>Nội dung</th>
+                        <th>Loại giao dịch</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Transactions.Any())
+                    {
+                        int index = 1;
+                        foreach (var item in Model.Transactions)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.TransactionTime.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.TransactionId</td>
+                                <td>@item.SourceAccount</td>
+                                <td>@item.RecipientAccount</td>
+                                <td>@item.RecipientName</td>
+                                <td>@item.RecipientBank</td>
+                                <td>@item.Amount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND</td>
+                                <td>@item.Description</td>
+                                <td>
+                                    <span class="badge @(item.Category == "Nhận" ? "bg-success" : "bg-warning")">
+                                        @item.Category
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    @if (item.Category == "Nhận")
+                                    {
+                                        <form asp-action="DeleteTransaction" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa giao dịch này?');">
+                                            <input type="hidden" name="id" value="@item.TransactionId" />
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">Không có giao dịch nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Phân trang -->
+            <div class="d-flex justify-content-center">
+                @Html.PagedListPager(Model.PagedTransactions, page => Url.Action("Index", new
+                    {
+                        transactionId = Model.TransactionId,
+                        startDate = Model.StartDate,
+                        endDate = Model.EndDate,
+                        minAmount = Model.MinAmount,
+                        maxAmount = Model.MaxAmount,
+                        category = Model.Category,
+                        sourceAccount = Model.SourceAccount,
+                        page
+                    }))
+            </div>
+            <p>Hiển thị @Model.PagedTransactions.Count của @Model.PagedTransactions.TotalItemCount giao dịch (Trang @Model.PagedTransactions.PageNumber / @Model.PagedTransactions.PageCount).</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+}
