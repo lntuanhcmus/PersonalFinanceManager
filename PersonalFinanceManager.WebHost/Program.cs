@@ -1,5 +1,15 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using Microsoft.AspNetCore.Localization;
+using System.Globalization;
 
+var builder = WebApplication.CreateBuilder(args);
+// Thêm dịch vụ localization
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { new CultureInfo("vi-VN") };
+    options.DefaultRequestCulture = new RequestCulture("vi-VN");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
 // Thêm dịch vụ CORS
 builder.Services.AddCors(options =>
 {
@@ -19,6 +29,8 @@ builder.Services.AddHttpClient("ApiClient", client =>
 });
 
 var app = builder.Build();
+// Sử dụng localization
+app.UseRequestLocalization();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

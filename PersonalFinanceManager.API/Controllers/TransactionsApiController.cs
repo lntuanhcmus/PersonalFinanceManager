@@ -67,8 +67,8 @@ namespace PersonalFinanceManager.Controllers
         return Ok(response);
     }
 
-        [HttpGet("{id}")]
-        public ActionResult<Transaction> GetById(string id)
+        [HttpGet("get-by-id")]
+        public ActionResult<Transaction> GetById([FromQuery] string id)
         {
             var transaction = _transactionService.GetById(id);
             if (transaction == null)
@@ -90,24 +90,32 @@ namespace PersonalFinanceManager.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTransaction([FromBody] TransactionDto transactionDto)
         {
-            if (transactionDto == null || string.IsNullOrEmpty(transactionDto.TransactionId))
-                return BadRequest("Dữ liệu không hợp lệ");
-
-            var transaction = new Transaction
+            try
             {
-                TransactionId = transactionDto.TransactionId,
-                TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture),
-                SourceAccount = transactionDto.SourceAccount,
-                RecipientAccount = transactionDto.RecipientAccount,
-                RecipientName = transactionDto.RecipientName,
-                RecipientBank = transactionDto.RecipientBank,
-                Amount = transactionDto.Amount,
-                Description = transactionDto.Description,
-                Category = transactionDto.Category
-            };
+                if (transactionDto == null || string.IsNullOrEmpty(transactionDto.TransactionId))
+                    return BadRequest("Dữ liệu không hợp lệ");
 
-            await _transactionService.AddTransaction(transaction);
-            return Ok();
+                var transaction = new Transaction
+                {
+                    TransactionId = transactionDto.TransactionId,
+                    TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture),
+                    SourceAccount = transactionDto.SourceAccount,
+                    RecipientAccount = transactionDto.RecipientAccount,
+                    RecipientName = transactionDto.RecipientName,
+                    RecipientBank = transactionDto.RecipientBank,
+                    Amount = transactionDto.Amount,
+                    Description = transactionDto.Description,
+                    Category = transactionDto.Category
+                };
+
+                await _transactionService.AddTransaction(transaction);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+                throw;
+            }
         }
 
         [HttpPut("{id}")]

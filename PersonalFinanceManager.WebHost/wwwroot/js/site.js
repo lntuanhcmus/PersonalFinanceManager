@@ -1,4 +1,21 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿// Hàm hiển thị modal với nội dung và callback khi xác nhận
+function showConfirmationModal(content, onConfirm) {
+    // Cập nhật nội dung modal
+    document.querySelector('#confirmationModal .modal-body').innerText = content;
 
-// Write your JavaScript code.
+    // Hiển thị modal
+    var modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    modal.show();
+
+    // Xử lý nút Xác nhận
+    var confirmButton = document.getElementById('confirmButton');
+    confirmButton.onclick = function () {
+        if (onConfirm) onConfirm(); // Thực thi callback
+        modal.hide(); // Đóng modal sau khi xác nhận
+    };
+}
+
+// Đảm bảo modal đóng không giữ lại onclick cũ
+document.getElementById('confirmationModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('confirmButton').onclick = null;
+});

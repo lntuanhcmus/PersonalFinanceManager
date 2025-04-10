@@ -9,6 +9,7 @@ namespace PersonalFinanceManager.Shared.Models
         [JsonPropertyName("transactionId")]
         public string TransactionId { get; set; }
 
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = true)]
         [JsonPropertyName("transactionTime")]
         public DateTime TransactionTime { get; set; }
 

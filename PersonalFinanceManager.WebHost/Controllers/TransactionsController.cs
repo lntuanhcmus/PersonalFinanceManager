@@ -79,42 +79,64 @@ namespace PersonalFinanceManager.WebHost.Controllers
         }
 
         [HttpGet]
-        public IActionResult AddReceivedTransaction()
+        public IActionResult AddTransaction()
         {
-            var model = new Transaction
+            var model = new TransactionDto
             {
-                TransactionTime = DateTime.Now // Gán ngày giờ hiện tại
+                TransactionTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm") // Gán ngày giờ hiện tại
             };
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddReceivedTransaction(TransactionDto model)
+        public async Task<IActionResult> AddTransaction(TransactionDto transactionDto)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                return View(model);
-            }
+                if (transactionDto.Amount <= 0)
+                {
+                    ModelState.AddModelError("Amount", "Số tiền phải lớn hơn 0.");
+                    return View(transactionDto);
+                }
 
-            var client = _httpClientFactory.CreateClient("ApiClient");
-            var json = JsonSerializer.Serialize(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("api/transactionsApi", content);
+                if (transactionDto.Category != "Nhận" && transactionDto.Category != "Chi")
+                {
+                    ModelState.AddModelError("Category", "Loại giao dịch phải là 'Nhận' hoặc 'Chi'.");
+                    return View(transactionDto);
+                }
 
-            if (response.IsSuccessStatusCode)
-            {
-                TempData["Success"] = "Giao dịch đã được thêm thành công!";
-                return RedirectToAction("Index");
+
+
+                var client = _httpClientFactory.CreateClient("ApiClient");
+                var checkDuplicate = await client.GetAsync($"api/transactionsApi/get-by-id?id={transactionDto.TransactionId}");
+                if (checkDuplicate.IsSuccessStatusCode)
+                {
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var existedTransaction = JsonSerializer.Deserialize<Transaction>(await checkDuplicate.Content.ReadAsStringAsync(), options);
+                    if(existedTransaction != null)
+                    {
+                        ModelState.AddModelError("TransactionId", "Mã giao dịch đã tồn tại.");
+                        return View(transactionDto);
+                    } 
+
+                }
+                var json = JsonSerializer.Serialize(transactionDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("api/transactionsApi", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    return RedirectToAction("Index");
+                }
+                ModelState.AddModelError("", "Không thể thêm giao dịch. Vui lòng thử lại.");
             }
-            TempData["Error"] = "Lỗi khi thêm giao dịch";
-            return View(model);
+            return View(transactionDto);
         }
 
         [HttpGet]
         public async Task<IActionResult> EditTransaction(string id)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var response = await client.GetAsync($"api/transactionsApi/{id}");
+            var response = await client.GetAsync($"api/transactionsApi/get-by-id?id={id}");
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();

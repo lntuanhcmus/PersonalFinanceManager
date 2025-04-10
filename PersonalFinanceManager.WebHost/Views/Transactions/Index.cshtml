@@ -8,7 +8,7 @@
         <h2 class="text-primary">Danh sách giao dịch</h2>
     </div>
     <div class="col text-end">
-        <a href="@Url.Action("AddReceivedTransaction")" class="btn btn-success me-2">
+        <a href="@Url.Action("AddTransaction")" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Thêm giao dịch
         </a>
         <a href="@Url.Action("RefreshFromGmail")" class="btn btn-info text-white">
@@ -130,9 +130,9 @@
                                     </a>
                                     @if (item.Category == "Nhận")
                                     {
-                                        <form asp-action="DeleteTransaction" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa giao dịch này?');">
+                                        <form asp-action="DeleteTransaction" method="post" class="d-inline delete-form" id="delete-form-@item.TransactionId">
                                             <input type="hidden" name="id" value="@item.TransactionId" />
-                                            <button type="submit" class="btn btn-sm btn-danger">
+                                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-form-id="delete-form-@item.TransactionId">
                                                 <i class="bi bi-trash"></i> Xóa
                                             </button>
                                         </form>
@@ -152,7 +152,7 @@
             </table>
 
             <!-- Phân trang -->
-            <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-center mt-3">
                 @Html.PagedListPager(Model.PagedTransactions, page => Url.Action("Index", new
                     {
                         transactionId = Model.TransactionId,
@@ -163,9 +163,30 @@
                         category = Model.Category,
                         sourceAccount = Model.SourceAccount,
                         page
-                    }))
+                    }),
+                    new PagedListRenderOptions
+                    {
+                        LiElementClasses = new[] { "page-item" },
+                        PageClasses = new[] { "page-link" },
+                        DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                        DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                        LinkToPreviousPageFormat = "<i class='bi bi-chevron-left'></i>",
+                        LinkToNextPageFormat = "<i class='bi bi-chevron-right'></i>",
+                        MaximumPageNumbersToDisplay = 5, // Giới hạn số nút trang hiển thị
+                        DisplayEllipsesWhenNotShowingAllPageNumbers = true // Hiển thị "..." khi có nhiều trang
+                    })
             </div>
-            <p>Hiển thị @Model.PagedTransactions.Count của @Model.PagedTransactions.TotalItemCount giao dịch (Trang @Model.PagedTransactions.PageNumber / @Model.PagedTransactions.PageCount).</p>
+
+            <div class="d-flex justify-content-center align-items-center mt-2 gap-2">
+                <span class="badge bg-info text-dark">
+                    Hiển thị @Model.PagedTransactions.Count / @Model.PagedTransactions.TotalItemCount giao dịch
+                    (Trang @Model.PagedTransactions.PageNumber / @Model.PagedTransactions.PageCount)
+                </span>
+                <div class="input-group w-auto">
+                    <input type="number" id="goToPage" class="form-control" min="1" max="@Model.PagedTransactions.PageCount" placeholder="Trang" style="width: 80px;" />
+                    <button class="btn btn-outline-primary" onclick="goToPage()">Đi</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -193,12 +214,33 @@
                     instance.element.value = dateStr;
                 }
             });
+            document.querySelectorAll('.delete-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var formId = this.getAttribute('data-form-id');
+                    var form = document.getElementById(formId);
+
+                    showConfirmationModal(
+                        'Bạn có chắc muốn xóa giao dịch này?',
+                        function () {
+                            form.submit(); // Submit form khi xác nhận
+                        }
+                    );
+                });
+            });
         });
 
         function resetForm() {
             // Chuyển hướng về Index mà không có tham số lọc
             window.location.href = '@Url.Action("Index", "Transactions")';
         }
+
+        function goToPage() {
+            var page = document.getElementById('goToPage').value;
+            if (page && page >= 1 && page <= @Model.PagedTransactions.PageCount) {
+                window.location.href = '@Url.Action("Index", new { /* Các param */ page = "__page__" })'.replace('__page__', page);
+            }
+        }
+
     </script>
     
 }

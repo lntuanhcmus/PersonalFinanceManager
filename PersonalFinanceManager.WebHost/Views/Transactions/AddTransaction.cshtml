@@ -1,26 +1,29 @@
-﻿@model PersonalFinanceManager.Shared.Models.Transaction
+﻿@model PersonalFinanceManager.Shared.Dto.TransactionDto
 
 <div class="row mb-3">
     <div class="col">
-        <h2 class="text-primary">Thêm giao dịch nhận tiền</h2>
+        <h2 class="text-primary">Thêm giao dịch</h2>
     </div>
 </div>
 
-@if (!ViewData.ModelState.IsValid && ViewData.ModelState[""].Errors.Any())
+@if (!ViewData.ModelState.IsValid)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @ViewData.ModelState[""].Errors.FirstOrDefault()?.ErrorMessage
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
 <div class="card">
     <div class="card-body">
-        <form asp-action="AddReceivedTransaction" method="post" class="needs-validation" novalidate>
+        <form asp-action="AddTransaction" method="post" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label asp-for="TransactionTime" class="form-label">Ngày giao dịch</label>
                 <div class="input-group">
-                    <input asp-for="TransactionTime" class="form-control datetimepicker" required placeholder="VD: 08/04/2025 18:11" />
+                    <input asp-for="TransactionTime" asp-format="{0:dd/MM/yyyy HH:mm}" class="form-control datetimepicker" required placeholder="VD: 08/04/2025 18:11" />
                     <span class="input-group-text">
                         <i class="bi bi-calendar"></i>
                     </span>
@@ -38,17 +41,34 @@
                 <div class="invalid-feedback">Vui lòng nhập số tiền (chỉ nhập số, không cần VND).</div>
             </div>
             <div class="mb-3">
-                <label asp-for="SourceAccount" class="form-label">Người gửi</label>
-                <input asp-for="SourceAccount" class="form-control" placeholder="VD: Nguyen Van A" />
+                <label asp-for="Category" class="form-label">Loại giao dịch</label>
+                <select asp-for="Category" class="form-control" required>
+                    <option value="">Chọn loại giao dịch</option>
+                    <option value="Nhận">Nhận tiền</option>
+                    <option value="Chi">Chi tiền</option>
+                </select>
+                <div class="invalid-feedback">Vui lòng chọn loại giao dịch.</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="SourceAccount" class="form-label">Tài khoản nguồn</label>
+                <input asp-for="SourceAccount" class="form-control" placeholder="VD: Nguyen Van A hoặc 123456789" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RecipientAccount" class="form-label">Tài khoản đích</label>
+                <input asp-for="RecipientAccount" class="form-control" placeholder="VD: Your VCB Account hoặc 987654321" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RecipientName" class="form-label">Tên người hưởng</label>
+                <input asp-for="RecipientName" class="form-control" placeholder="VD: You hoặc Tran Thi B" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="RecipientBank" class="form-label">Ngân hàng đích</label>
+                <input asp-for="RecipientBank" class="form-control" placeholder="VD: Vietcombank" />
             </div>
             <div class="mb-3">
                 <label asp-for="Description" class="form-label">Nội dung</label>
-                <input asp-for="Description" class="form-control" placeholder="VD: Lương tháng 4" />
+                <input asp-for="Description" class="form-control" placeholder="VD: Lương tháng 4 hoặc Thanh toán hóa đơn" />
             </div>
-            <input type="hidden" asp-for="Category" value="Nhận" />
-            <input type="hidden" asp-for="RecipientAccount" value="Your VCB Account" />
-            <input type="hidden" asp-for="RecipientName" value="You" />
-            <input type="hidden" asp-for="RecipientBank" value="Vietcombank" />
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Thêm giao dịch</button>
                 <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
@@ -66,7 +86,7 @@
                 dateFormat: "d/m/Y H:i",
                 time_24hr: true,
                 minuteIncrement: 1,
-                defaultDate: "@Model.TransactionTime.ToString("dd/MM/yyyy HH:mm")" // Giá trị mặc định từ model
+                defaultDate: "@Model.TransactionTime" // Giá trị mặc định từ model
             });
 
             var forms = document.querySelectorAll('.needs-validation');
