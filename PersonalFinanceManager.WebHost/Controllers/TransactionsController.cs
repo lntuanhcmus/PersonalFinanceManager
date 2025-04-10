@@ -21,8 +21,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(
             string transactionId = null,
-            DateTime? startDate = null,
-            DateTime? endDate = null,
+            string startDate = null,
+            string endDate = null,
             decimal? minAmount = null,
             decimal? maxAmount = null,
             string category = null,
@@ -30,10 +30,13 @@ namespace PersonalFinanceManager.WebHost.Controllers
             string content = null,
             int page = 1)
         {
+            DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+            DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
             var client = _httpClientFactory.CreateClient("ApiClient");
             var query = $"?transactionId={Uri.EscapeDataString(transactionId ?? "")}" +
-                        $"&startDate={(startDate.HasValue ? startDate.Value.ToString("yyyy-MM-dd") : "")}" +
-                        $"&endDate={(endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : "")}" +
+                        $"&startDate={(startDateValue.HasValue ? startDateValue.Value.ToString("yyyy-MM-dd") : "")}" +
+                        $"&endDate={(endDateValue.HasValue ? endDateValue.Value.AddDays(1).ToString("yyyy-MM-dd") : "")}" +
                         $"&minAmount={minAmount}" +
                         $"&maxAmount={maxAmount}" +
                         $"&category={Uri.EscapeDataString(category ?? "")}" +
@@ -63,8 +66,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 Transactions = pagedTransactions.ToList(), // Để tương thích với view hiện tại
                 PagedTransactions = pagedTransactions, // Thêm để dùng phân trang
                 TransactionId = transactionId,
-                StartDate = startDate,
-                EndDate = endDate,
+                StartDate = startDateValue,
+                EndDate = endDateValue,
                 MinAmount = minAmount,
                 MaxAmount = maxAmount,
                 Category = category,
@@ -191,45 +194,39 @@ namespace PersonalFinanceManager.WebHost.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Dashboard(DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> Dashboard(string startDate = null, string endDate = null)
         {
+            // Nếu startDate không được cung cấp, mặc định là ngày đầu tháng hiện tại
+            DateTime? parsedStartDate = string.IsNullOrEmpty(startDate)
+                ? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)
+                : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+            // Nếu endDate không được cung cấp, để null hoặc có thể đặt mặc định (tùy yêu cầu)
+            DateTime? parsedEndDate = string.IsNullOrEmpty(endDate)
+                ? null
+                : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var query = "";
-            if (startDate.HasValue) query += $"startDate={startDate.Value:yyyy-MM-dd}&";
-            if (endDate.HasValue) query += $"endDate={endDate.Value:yyyy-MM-dd}";
-            var url = $"api/transactionsApi/summary?{query.TrimEnd('&')}";
-            var response = await client.GetAsync(url);
+            var query = $"?startDate={(parsedStartDate.HasValue ? parsedStartDate.Value.ToString("yyyy-MM-dd") : "")}" +
+                        $"&endDate={(parsedEndDate.HasValue ? parsedEndDate.Value.ToString("yyyy-MM-dd") : "")}";
+            var response = await client.GetAsync($"api/transactionsApi/summary{query}");
 
             FinancialSummary summary;
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"API Response: {json}");
-                summary = JsonSerializer.Deserialize<FinancialSummary>(json) ?? new FinancialSummary
-                {
-                    TotalIncome = 0,
-                    TotalExpense = 0,
-                    Balance = 0,
-                    CategoryBreakdown = new Dictionary<string, decimal>()
-                };
+                summary = JsonSerializer.Deserialize<FinancialSummary>(json) ?? new FinancialSummary();
             }
             else
             {
-                Console.WriteLine($"API Error: {response.StatusCode}");
-                summary = new FinancialSummary
-                {
-                    TotalIncome = 0,
-                    TotalExpense = 0,
-                    Balance = 0,
-                    CategoryBreakdown = new Dictionary<string, decimal>()
-                };
+                summary = new FinancialSummary();
             }
 
             var model = new DashboardViewModel
             {
                 Summary = summary,
-                StartDate = startDate,
-                EndDate = endDate
+                StartDate = parsedStartDate,
+                EndDate = parsedEndDate
             };
 
             return View(model);

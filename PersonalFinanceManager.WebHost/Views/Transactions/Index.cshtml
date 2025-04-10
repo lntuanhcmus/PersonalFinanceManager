@@ -33,47 +33,52 @@
 }
 
 <!-- Form tìm kiếm nằm ngang -->
-<div class="row mb-3">
+<div class="row mb-3 transaction-list">
     <div class="col">
-        <form asp-action="Index" method="get" class="d-flex flex-wrap align-items-end">
-            <div class="form-group me-2 mb-2">
-                <label for="transactionId" class="form-label">Mã GD:</label>
-                <input type="text" id="transactionId" name="transactionId" value="@Model.TransactionId" class="form-control form-control-sm" />
+        <form asp-action="Index" method="get" id="searchForm">
+            <div class="row">
+                <div class="form-group mb-2 col-2">
+                    <label for="transactionId" class="form-label">Mã GD:</label>
+                    <input type="text" id="transactionId" name="transactionId" value="@Model.TransactionId" class="form-control form-control-sm" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="startDate" class="form-label">Từ ngày:</label>
+                    <input type="text" id="startDate" name="startDate" value="@Model.StartDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="endDate" class="form-label">Đến ngày:</label>
+                    <input type="text" id="endDate" name="endDate" value="@Model.EndDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="minAmount" class="form-label">Số tiền từ:</label>
+                    <input type="number" id="minAmount" name="minAmount" value="@Model.MinAmount" class="form-control form-control-sm" step="any" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="maxAmount" class="form-label">Đến:</label>
+                    <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control form-control-sm" step="any" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="category" class="form-label">Danh mục:</label>
+                    <select id="category" name="category" class="form-control">
+                        <option value="">Chọn danh mục</option>
+                        <option value="Nhận">Nhận</option>
+                        <option value="Chi">Chi</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group me-2 mb-2">
-                <label for="startDate" class="form-label">Từ ngày:</label>
-                <input type="date" id="startDate" name="startDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
-            </div>
-            <div class="form-group me-2 mb-2">
-                <label for="endDate" class="form-label">Đến ngày:</label>
-                <input type="date" id="endDate" name="endDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" class="form-control form-control-sm" />
-            </div>
-            <div class="form-group me-2 mb-2">
-                <label for="minAmount" class="form-label">Số tiền từ:</label>
-                <input type="number" id="minAmount" name="minAmount" value="@Model.MinAmount" class="form-control form-control-sm" step="any" />
-            </div>
-            <div class="form-group me-2 mb-2">
-                <label for="maxAmount" class="form-label">Đến:</label>
-                <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control form-control-sm" step="any" />
-            </div>
-            <div class="form-group me-2 mb-2">
-                <label for="category" class="form-label">Danh mục:</label>
-                <select id="category" name="category" class="form-control">
-                    <option value="">Chọn danh mục</option>
-                    <option value="Nhận">Nhận</option>
-                    <option value="Chi">Chi</option>
-                </select>
-            </div>
-            <div class="form-group me-2 mb-2">
-                <label for="sourceAccount" class="form-label">TK nguồn:</label>
-                <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control form-control-sm" />
-            </div>
-            <div class="form-group me-2 mb-2">
-                <label for="content" class="form-label">Nội dung</label>
-                <input type="text" id="content" name="content" value="@Model.Content" class="form-control form-control-sm" />
-            </div>
-            <div class="form-group mb-2 d-flex align-items-center">
-                <button type="submit" class="btn btn-primary btn-sm">Tìm kiếm</button>
+            <div class="row">
+                <div class="form-group mb-2 col-2">
+                    <label for="sourceAccount" class="form-label">TK nguồn:</label>
+                    <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control form-control-sm" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="content" class="form-label">Nội dung</label>
+                    <input type="text" id="content" name="content" value="@Model.Content" class="form-control form-control-sm" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-4" style="display: flex; flex-direction: row; padding: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary btn-sm">Tìm kiếm</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="margin-left: 15px" onclick="resetForm()">Xóa bộ lọc</button>
+                </div>
             </div>
         </form>
     </div>
@@ -169,5 +174,31 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr('#startDate', {
+                dateFormat: 'd/m/Y', // Định dạng hiển thị: dd/MM/yyyy
+                allowInput: true,    // Cho phép nhập tay
+                onClose: function (selectedDates, dateStr, instance) {
+                    // Cập nhật giá trị khi chọn ngày
+                    instance.element.value = dateStr;
+                }
+            });
+
+            flatpickr('#endDate', {
+                dateFormat: 'd/m/Y', // Định dạng hiển thị: dd/MM/yyyy
+                allowInput: true,    // Cho phép nhập tay
+                onClose: function (selectedDates, dateStr, instance) {
+                    // Cập nhật giá trị khi chọn ngày
+                    instance.element.value = dateStr;
+                }
+            });
+        });
+
+        function resetForm() {
+            // Chuyển hướng về Index mà không có tham số lọc
+            window.location.href = '@Url.Action("Index", "Transactions")';
+        }
+    </script>
     
 }

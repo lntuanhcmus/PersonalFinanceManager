@@ -1,0 +1,26 @@
+﻿@* _Navbar.cshtml *@
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+        <!-- Bên trái: Icon và tên ứng dụng -->
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <i class="fas fa-wallet me-2"></i> <!-- Icon ví tiền -->
+            Quản Lý Tài Chính Cá Nhân
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Bên phải: Menu -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Transactions" asp-action="Dashboard">Tổng quan</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Transactions" asp-action="Index">Giao dịch</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+

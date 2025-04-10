@@ -9,16 +9,18 @@
 <!-- Bộ lọc thời gian -->
 <div class="row mb-3">
     <div class="col">
-        <form asp-action="Dashboard" method="get" class="form-inline">
-            <div class="form-group mr-2">
-                <label for="startDate" class="mr-2">Từ ngày:</label>
-                <input type="date" id="startDate" name="startDate" value="@Model.StartDate?.ToString("yyyy-MM-dd")" class="form-control" />
+        <form asp-action="Dashboard" method="get" class="d-flex flex-wrap align-items-end" id="filterForm">
+            <div class="form-group me-2 mb-2">
+                <label for="startDate" class="form-label">Từ ngày:</label>
+                <input type="text" id="startDate" name="startDate" value="@Model.StartDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
             </div>
-            <div class="form-group mr-2">
-                <label for="endDate" class="mr-2">Đến ngày:</label>
-                <input type="date" id="endDate" name="endDate" value="@Model.EndDate?.ToString("yyyy-MM-dd")" class="form-control" />
+            <div class="form-group me-2 mb-2">
+                <label for="endDate" class="form-label">Đến ngày:</label>
+                <input type="text" id="endDate" name="endDate" value="@Model.EndDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
             </div>
-            <button type="submit" class="btn btn-primary">Lọc</button>
+            <div class="form-group mb-2">
+                <button type="submit" class="btn btn-primary btn-sm">Lọc</button>
+            </div>
         </form>
     </div>
 </div>
@@ -72,37 +74,52 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            flatpickr('#startDate', {
+                dateFormat: 'd/m/Y',
+                allowInput: true,
+                defaultDate: '@Model.StartDate?.ToString("dd/MM/yyyy")', // Giá trị mặc định từ Model
+                onClose: function (selectedDates, dateStr, instance) {
+                    instance.element.value = dateStr;
+                }
+            });
+
+            flatpickr('#endDate', {
+                dateFormat: 'd/m/Y',
+                allowInput: true,
+                onClose: function (selectedDates, dateStr, instance) {
+                    instance.element.value = dateStr;
+                }
+            });
+
             // Biểu đồ phân bổ danh mục
-            @if (Model.Summary.CategoryBreakdown != null && Model.Summary.CategoryBreakdown.Any())
-            {
-                @:var ctxCategory = document.getElementById('categoryChart').getContext('2d');
-                @:var categoryChart = new Chart(ctxCategory, {
-                @:    type: 'pie',
-                @:    data: {
-                @:        labels: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Keys)),
-                @:        datasets: [{
-                @:            data: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Values)),
-                @:            backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0']
-                @:        }]
-                @:    },
-                @:    options: {
-                @:        responsive: true,
-                @:        plugins: {
-                @:            legend: { position: 'top' },
-                @:            title: { display: true, text: 'Phân bổ theo danh mục' }
-                @:        }
-                @:    }
-                @:});
-            }
+        @if (Model.Summary.CategoryBreakdown != null && Model.Summary.CategoryBreakdown.Any())
+        {
+            @:var ctxCategory = document.getElementById('categoryChart').getContext('2d');
+            @:var categoryChart = new Chart(ctxCategory, {
+            @:type: 'pie',
+            @:data: {
+            @:labels: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Keys)),
+            @:datasets: [{
+            @:data: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Values)),
+            @:backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0']
+            @:        }]
+            @:    },
+            @:options: {
+            @:responsive: true,
+            @:plugins: {
+            @:legend: { position: 'top' },
+            @:title: { display: true, text: 'Phân bổ theo danh mục' }
+            @:        }
+            @:    }
+            @:});
+        }
 
             // Biểu đồ thu/chi theo tháng
             fetch('http://localhost:8000/api/transactionsApi/monthly-summary' + '@(Model.StartDate.HasValue ? "?startDate=" + Model.StartDate.Value.ToString("yyyy-MM-dd") : "")' + '@(Model.EndDate.HasValue ? "&endDate=" + Model.EndDate.Value.ToString("yyyy-MM-dd") : "")')
-                .then(response => {
-                    console.log(response)
-                    return response.json()
-                })
+                .then(response => response.json())
                 .then(data => {
                     var labels = Object.keys(data);
                     var incomeData = labels.map(key => data[key].income);
@@ -142,6 +159,6 @@
                     });
                 })
                 .catch(error => console.error('Error fetching monthly data:', error));
-        });
+                });
     </script>
 }
