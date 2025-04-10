@@ -11,7 +11,7 @@ using PersonalFinanceManager.API.Data;
 
 namespace PersonalFinanceManager.API.Migrations
 {
-    [DbContext(typeof(TransactionContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20250409150109_InitialCreate")]
     partial class InitialCreate
     {

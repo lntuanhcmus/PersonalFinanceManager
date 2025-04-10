@@ -6,9 +6,9 @@ namespace PersonalFinanceManager.API.Services
 {
     public class TransactionService
     {
-        private readonly TransactionContext _context;
+        private readonly AppDbContext _context;
 
-        public TransactionService(TransactionContext context) 
+        public TransactionService(AppDbContext context) 
         {
             _context = context;
         }

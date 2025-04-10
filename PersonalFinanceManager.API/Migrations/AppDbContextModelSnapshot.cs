@@ -10,8 +10,8 @@ using PersonalFinanceManager.API.Data;
 
 namespace PersonalFinanceManager.API.Migrations
 {
-    [DbContext(typeof(TransactionContext))]
-    partial class TransactionContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AppDbContext))]
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
