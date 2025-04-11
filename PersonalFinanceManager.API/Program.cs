@@ -25,8 +25,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<GmailService>();
-builder.Services.AddScoped<ExcelService>();
+//builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<TransactionService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<BudgetService>();
 
 
 // Add DbContext

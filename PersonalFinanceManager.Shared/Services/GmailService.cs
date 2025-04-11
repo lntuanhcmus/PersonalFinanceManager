@@ -17,6 +17,7 @@ using System.Globalization;
 using Google.Apis.Util.Store;
 using Google.Apis.Auth.OAuth2.Requests;
 using Newtonsoft.Json.Linq;
+using PersonalFinanceManager.Shared.Enum;
 
 namespace PersonalFinanceManager.Shared.Services
 {
@@ -88,7 +89,7 @@ namespace PersonalFinanceManager.Shared.Services
 
             var request = service.Users.Messages.List("me");
             request.Q = "from:vietcombank Biên lai chuyển tiền qua tài khoản";
-            request.MaxResults = 10;
+            request.MaxResults = 100;
 
             var messages = (await request.ExecuteAsync()).Messages ?? new List<Google.Apis.Gmail.v1.Data.Message>();
             var transactions = new List<Transaction>();
@@ -126,7 +127,7 @@ namespace PersonalFinanceManager.Shared.Services
                     RecipientBank = result["Tên ngân hàng hưởng"],
                     Amount = decimal.Parse(result["Số tiền"].Replace(" VND", "").Replace(",", ""), CultureInfo.InvariantCulture),
                     Description = result["Nội dung chuyển tiền"],
-                    Category = "Chi"
+                    TransactionTypeId = (int)TransactionTypeEnum.Expense
                 });
             }
 

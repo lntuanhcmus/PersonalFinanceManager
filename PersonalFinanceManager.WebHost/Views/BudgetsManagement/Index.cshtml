@@ -1,0 +1,223 @@
+﻿@model PersonalFinanceManager.WebHost.Models.BudgetsViewModel
+@using System.Globalization
+@using PersonalFinanceManager.WebHost.Helper
+@using X.PagedList.Mvc.Core
+@using X.PagedList.Extensions
+@using PersonalFinanceManager.Shared.Enum
+
+<div class="row mb-3">
+    <div class="col">
+        <h2 class="text-primary">Danh sách ngân sách</h2>
+    </div>
+    <div class="col text-end">
+        <a href="@Url.Action("Create", "BudgetsManagement")" class="btn btn-success me-2">
+            <i class="bi bi-plus-circle"></i> Thêm ngân sách
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Form tìm kiếm -->
+<div class="row mb-3">
+    <div class="col">
+        <form asp-action="Index" asp-controller="BudgetsManagement" method="get" id="searchForm">
+            <div class="row">
+                <div class="form-group mb-2 col-2">
+                    <label for="category" class="form-label">Danh mục:</label>
+                    <select asp-for="CategoryId"
+                            asp-items="Model.Categories"
+                            class="form-control form-control-sm">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="startDate" class="form-label">Từ ngày:</label>
+                    <input type="text" id="startDate" name="startDate" value="@Model.StartDate" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="endDate" class="form-label">Đến ngày:</label>
+                    <input type="text" id="endDate" name="endDate" value="@Model.EndDate" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="minAmount" class="form-label">Số tiền từ:</label>
+                    <input type="number" id="minAmount" name="minAmount" value="@Model.MinAmount" class="form-control form-control-sm" step="any" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="maxAmount" class="form-label">Đến:</label>
+                    <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control form-control-sm" step="any" autocomplete="off" />
+                </div>
+                <div class="form-group mb-2 col-2">
+                    <label for="period" class="form-label">Chu kỳ:</label>
+                    <select asp-for="Period"
+                            asp-items="Model.Periods"
+                            class="form-control form-control-sm">
+                        <option value="">-- Chọn chu kỳ --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group mb-2 col-4" style="display: flex; flex-direction: row; padding: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary btn-sm">Tìm kiếm</button>
+                    <button type="button" class="btn btn-secondary btn-sm" style="margin-left: 15px" onclick="resetForm()">Xóa bộ lọc</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>STT</th>
+                        <th>Danh mục</th>
+                        <th>Số tiền (VND)</th>
+                        <th>Chu kỳ</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Ngày kết thúc</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.PagedBudgets.Any())
+                    {
+                        int index = 1;
+                        foreach (var budget in Model.PagedBudgets)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@budget.CategoryName</td>
+                                <td>@budget.Amount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))</td>
+                                @{
+                                    var displayPeriod = EnumHelper.GetDisplayNameFromString<BudgetPeriodEnum>(budget.Period);
+                                }
+                                <td>@displayPeriod</td>
+                                <td>@budget.StartDate</td>
+                                <td>@(budget.EndDate ?? "Không giới hạn")</td>
+                                <td>
+                                    <a href="@Url.Action("Edit", "BudgetsManagement", new { id = budget.Id })" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <form asp-action="Delete" asp-controller="BudgetsManagement" method="post" class="d-inline delete-form" id="delete-form-@budget.Id">
+                                        <input type="hidden" name="id" value="@budget.Id" />
+                                        <button type="button" class="btn btn-sm btn-danger delete-btn" data-form-id="delete-form-@budget.Id">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Không có ngân sách nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Phân trang -->
+            <div class="d-flex justify-content-center mt-3">
+                @Html.PagedListPager(Model.PagedBudgets, page => Url.Action("Index", new
+                    {
+                        categoryId = Model.CategoryId,
+                        startDate = Model.StartDate,
+                        endDate = Model.EndDate,
+                        minAmount = Model.MinAmount,
+                        maxAmount = Model.MaxAmount,
+                        period = Model.Period,
+                        page
+                    }),
+                         new PagedListRenderOptions
+                {
+                    LiElementClasses = new[] { "page-item" },
+                    PageClasses = new[] { "page-link" },
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                    LinkToPreviousPageFormat = "<i class='bi bi-chevron-left'></i>",
+                    LinkToNextPageFormat = "<i class='bi bi-chevron-right'></i>",
+                    MaximumPageNumbersToDisplay = 5,
+                    DisplayEllipsesWhenNotShowingAllPageNumbers = true
+                })
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center mt-2 gap-2">
+                <span class="badge bg-info text-dark">
+                    Hiển thị @Model.PagedBudgets.Count / @Model.PagedBudgets.TotalItemCount ngân sách
+                    (Trang @Model.PagedBudgets.PageNumber / @Model.PagedBudgets.PageCount)
+                </span>
+                <div class="input-group w-auto">
+                    <input type="number" id="goToPage" class="form-control" min="1" max="@Model.PagedBudgets.PageCount" placeholder="Trang" style="width: 80px;" />
+                    <button class="btn btn-outline-primary" onclick="goToPage()">Đi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr('#startDate', {
+                dateFormat: 'd/m/Y',
+                allowInput: true,
+                onClose: function (selectedDates, dateStr, instance) {
+                    instance.element.value = dateStr;
+                }
+            });
+
+            flatpickr('#endDate', {
+                dateFormat: 'd/m/Y',
+                allowInput: true,
+                onClose: function (selectedDates, dateStr, instance) {
+                    instance.element.value = dateStr;
+                }
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var formId = this.getAttribute('data-form-id');
+                    var form = document.getElementById(formId);
+
+                    showConfirmationModal(
+                        'Bạn có chắc muốn xóa ngân sách này?',
+                        function () {
+                            form.submit();
+                        }
+                    );
+                });
+            });
+        });
+
+        function resetForm() {
+            window.location.href = '@Url.Action("Index", "BudgetsManagement")';
+        }
+
+        function goToPage() {
+            var page = document.getElementById('goToPage').value;
+            if (page && page >= 1 && page <= @Model.PagedBudgets.PageCount) {
+                window.location.href = '@Url.Action("Index", new { categoryId = Model.CategoryId, startDate = Model.StartDate, endDate = Model.EndDate, minAmount = Model.MinAmount, maxAmount = Model.MaxAmount, period = Model.Period, page = "__page__" })'.replace('__page__', page);
+            }
+        }
+    </script>
+}

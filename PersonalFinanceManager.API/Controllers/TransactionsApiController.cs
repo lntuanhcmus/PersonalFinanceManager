@@ -4,6 +4,8 @@ using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Models;
 using PersonalFinanceManager.Shared.Dto;
 using System.Globalization;
+using PersonalFinanceManager.Shared.Enum;
+using PersonalFinanceManager.API.Data;
 
 namespace PersonalFinanceManager.Controllers
 {
@@ -12,13 +14,15 @@ namespace PersonalFinanceManager.Controllers
     public class TransactionsApiController : ControllerBase
     {
         private readonly GmailService _gmailService;
-        //private readonly ExcelService _transactionService;
         private readonly TransactionService _transactionService;
+        private readonly CategoryService _categoryService;
 
-        public TransactionsApiController(GmailService gmailService, TransactionService transactionService)
+
+        public TransactionsApiController(GmailService gmailService, TransactionService transactionService, CategoryService categoryService)
         {
             _gmailService = gmailService;
             _transactionService = transactionService;
+            _categoryService = categoryService;
         }
 
         //[HttpGet]
@@ -28,54 +32,37 @@ namespace PersonalFinanceManager.Controllers
         //}
 
         [HttpGet]
-    public async Task<ActionResult<PagedResponse<Transaction>>> GetTransactions(
-        string transactionId = null,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        decimal? minAmount = null,
-        decimal? maxAmount = null,
-        string category = null,
-        string sourceAccount = null,
-        string content = null,
-        int page = 1,
-        int pageSize = 10)
-    {
-        var transactions = _transactionService.GetTransactions();
-
-        var filtered = transactions
-            .Where(t => (string.IsNullOrEmpty(transactionId) || t.TransactionId.Contains(transactionId, StringComparison.OrdinalIgnoreCase)) &&
-                        (!startDate.HasValue || t.TransactionTime >= startDate) &&
-                        (!endDate.HasValue || t.TransactionTime <= endDate) &&
-                        (!minAmount.HasValue || t.Amount >= minAmount) &&
-                        (!maxAmount.HasValue || t.Amount <= maxAmount) &&
-                        (string.IsNullOrEmpty(category) || t.Category.Equals(category, StringComparison.OrdinalIgnoreCase)) &&
-                        (string.IsNullOrEmpty(sourceAccount) || t.SourceAccount.Contains(sourceAccount, StringComparison.OrdinalIgnoreCase)) &&
-                        (string.IsNullOrEmpty(content) || t.Description.Contains(content, StringComparison.OrdinalIgnoreCase)))
-            .ToList();
-
-        var totalItems = filtered.Count;
-        var pagedItems = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-        var response = new PagedResponse<Transaction>
+        public async Task<ActionResult<PagedResponse<TransactionDto>>> GetTransactions(
+            string transactionId = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            decimal? minAmount = null,
+            decimal? maxAmount = null,
+            int? categoryId = null,
+            int? transactionTypeId = null,
+            string sourceAccount = null,
+            string content = null,
+            int? page = 1,
+            int? pageSize = 10)
         {
-            Items = pagedItems,
-            TotalItems = totalItems,
-            PageNumber = page,
-            PageSize = pageSize
-        };
+            var result = await _transactionService.GetFilteredTransactionsAsync(
+                transactionId, startDate, endDate, minAmount, maxAmount,
+                categoryId, transactionTypeId, sourceAccount, content, page, pageSize);
 
-        return Ok(response);
-    }
+            return Ok(result);
+        }
+
 
         [HttpGet("get-by-id")]
-        public ActionResult<Transaction> GetById([FromQuery] string id)
+        public async Task<ActionResult<TransactionDto>> GetById([FromQuery] string id)
         {
             var transaction = _transactionService.GetById(id);
             if (transaction == null)
             {
                 return NotFound();
             }
-            return Ok(transaction);
+            var result = new TransactionDto(transaction);
+            return Ok(result);
         }
 
 
@@ -105,8 +92,10 @@ namespace PersonalFinanceManager.Controllers
                     RecipientBank = transactionDto.RecipientBank,
                     Amount = transactionDto.Amount,
                     Description = transactionDto.Description,
-                    Category = transactionDto.Category
+                    CategoryId = transactionDto.CategoryId
                 };
+
+                transaction = await ClassifyTransactionTypeByCategory(transactionDto.CategoryId, transaction);
 
                 await _transactionService.AddTransaction(transaction);
                 return Ok();
@@ -126,7 +115,8 @@ namespace PersonalFinanceManager.Controllers
 
             var transaction = _transactionService.GetById(id);
             if (transaction == null) return NotFound();
-            transaction.TransactionId = transactionDto.TransactionId;
+
+            // Cập nhật thông tin cơ bản
             transaction.TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
             transaction.SourceAccount = transactionDto.SourceAccount;
             transaction.RecipientAccount = transactionDto.RecipientAccount;
@@ -134,7 +124,9 @@ namespace PersonalFinanceManager.Controllers
             transaction.RecipientBank = transactionDto.RecipientBank;
             transaction.Amount = transactionDto.Amount;
             transaction.Description = transactionDto.Description;
-            transaction.Category = transactionDto.Category;
+            transaction.CategoryId = transactionDto.CategoryId;
+
+            transaction = await ClassifyTransactionTypeByCategory(transactionDto.CategoryId, transaction);
 
             await _transactionService.UpdateTransaction(transaction);
             return Ok();
@@ -146,7 +138,7 @@ namespace PersonalFinanceManager.Controllers
             var transaction = _transactionService.GetById(id);
             if (transaction == null)
                 return NotFound();
-            if (transaction.Category != "Nhận")
+            if (transaction.TransactionTypeId != (int)TransactionTypeEnum.Income)
                 return BadRequest("Chỉ có thể xóa giao dịch loại 'Nhận'");
 
             await _transactionService.DeleteTransaction(id); // Cần thêm hàm này
@@ -173,24 +165,34 @@ namespace PersonalFinanceManager.Controllers
                     g => g.Key,
                     g => new MonthlySummary
                     {
-                        Income = g.Where(t => t.Category == "Nhận").Sum(t => t.Amount),
-                        Expense = g.Where(t => t.Category == "Chi").Sum(t => t.Amount)
+                        Income = g.Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Income).Sum(t => t.Amount),
+                        Expense = g.Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Expense).Sum(t => t.Amount)
                     });
 
             return Ok(monthlyData);
         }
-        //[HttpGet("fetch")]
-        //public async Task<IActionResult> FetchTransactions()
-        //{
-        //    try
-        //    {
-        //        await _gmailService.ExtractTransactionsAsync();
-        //        return Ok("Giao dịch đã được lưu vào transactions.xlsx");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, $"Lỗi: {ex.Message}");
-        //    }
-        //}
+
+        [HttpGet("get-transaction-types")]
+        public async Task<ActionResult<List<TransactionType>>> GetTransactionTypes()
+        {
+            var transactionTypes = _transactionService.GetTransactionTypes();
+
+            return Ok(transactionTypes);
+        }
+
+
+        private async Task<Transaction> ClassifyTransactionTypeByCategory(int? categoryId, Transaction transaction)
+        {
+            if (categoryId.HasValue)
+            {
+                var category = await _categoryService.GetByIdAsync(categoryId.Value);
+                if (category == null)
+                    return null;
+
+                transaction.TransactionTypeId = category.TransactionTypeId;
+            }
+
+            return transaction;
+        }
     }
 }

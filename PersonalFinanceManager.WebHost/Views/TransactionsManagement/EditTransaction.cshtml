@@ -1,4 +1,4 @@
-﻿@model PersonalFinanceManager.Shared.Models.Transaction
+﻿@model PersonalFinanceManager.WebHost.Models.DetailTransactionViewModel
 
 <div class="row mb-3">
     <div class="col">
@@ -6,10 +6,13 @@
     </div>
 </div>
 
-@if (!ViewData.ModelState.IsValid && ViewData.ModelState[""].Errors.Any())
+@if (!ViewData.ModelState.IsValid)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @ViewData.ModelState[""].Errors.FirstOrDefault()?.ErrorMessage
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+        }
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
@@ -54,13 +57,23 @@
                 <input asp-for="Description" class="form-control" placeholder="VD: Lương tháng 4" />
             </div>
             <div class="mb-3">
-                <label asp-for="Category" class="form-label">Loại giao dịch</label>
-                <input asp-for="Category" class="form-control" readonly />
+                <label class="form-label">Danh mục</label>
+                <select asp-for="CategoryId"
+                        asp-items="Model.Categories"
+                        class="form-control">
+                    <option value="">-- Chọn danh mục --</option>
+                </select>
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                 <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
             </div>
+
+            @* Hidden Field*@
+            <input asp-for="Categories" hidden />
+            <input asp-for="TransactionTypeId" hidden />
+            <input asp-for="TransactionTypeName" hidden />
+            <input asp-for="CategoryName" hidden />
         </form>
     </div>
 </div>
@@ -74,7 +87,7 @@
                 dateFormat: "d/m/Y H:i",
                 time_24hr: true,
                 minuteIncrement: 1,
-                defaultDate: "@Model.TransactionTime.ToString("dd/MM/yyyy HH:mm")" // Giá trị ban đầu
+                defaultDate: "@Model.TransactionTime" // Giá trị ban đầu
             });
 
             var forms = document.querySelectorAll('.needs-validation');

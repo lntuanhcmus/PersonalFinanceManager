@@ -1,5 +1,6 @@
 ﻿@using System.Globalization
 @model PersonalFinanceManager.WebHost.Models.TransactionsViewModel
+@using PersonalFinanceManager.Shared.Enum
 @using X.PagedList.Mvc.Core
 @using X.PagedList.Extensions
 
@@ -58,15 +59,24 @@
                     <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control form-control-sm" step="any" autocomplete="off" />
                 </div>
                 <div class="form-group mb-2 col-2">
-                    <label for="category" class="form-label">Danh mục:</label>
-                    <select id="category" name="category" class="form-control">
-                        <option value="">Chọn danh mục</option>
-                        <option value="Nhận">Nhận</option>
-                        <option value="Chi">Chi</option>
+                    <label for="category" class="form-label">Loại giao dịch</label>
+                    <select asp-for="TransactionTypeId"
+                            asp-items="Model.TransactionTypes"
+                            class="form-control form-control-sm">
+                        <option value="">-- Chọn Loại giao dịch --</option>
                     </select>
                 </div>
+                
             </div>
             <div class="row">
+                <div class="form-group mb-2 col-2">
+                    <label for="category" class="form-label">Danh mục:</label>
+                    <select asp-for="CategoryId"
+                            asp-items="Model.Categories"
+                            class="form-control form-control-sm">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                </div>
                 <div class="form-group mb-2 col-2">
                     <label for="sourceAccount" class="form-label">TK nguồn:</label>
                     <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control form-control-sm" autocomplete="off" />
@@ -100,6 +110,7 @@
                         <th>Số tiền</th>
                         <th>Nội dung</th>
                         <th>Loại giao dịch</th>
+                        <th>Mục đích giao dịch</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -111,7 +122,7 @@
                         {
                             <tr>
                                 <td>@index</td>
-                                <td>@item.TransactionTime.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.TransactionTime</td>
                                 <td>@item.TransactionId</td>
                                 <td>@item.SourceAccount</td>
                                 <td>@item.RecipientAccount</td>
@@ -120,20 +131,25 @@
                                 <td>@item.Amount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND</td>
                                 <td>@item.Description</td>
                                 <td>
-                                    <span class="badge @(item.Category == "Nhận" ? "bg-success" : "bg-warning")">
-                                        @item.Category
+                                    <span class="badge @(item.TransactionTypeId == (int)TransactionTypeEnum.Income ? "bg-success" : "bg-warning")">
+                                        @item.TransactionTypeName
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-pencil"></i> Sửa
+                                    <span class="badge @(item.TransactionTypeId == (int)TransactionTypeEnum.Income ? "bg-success" : "bg-warning")">
+                                        @item.CategoryName
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })" class="btn btn-sm btn-primary mb-2">
+                                        <i class="bi bi-pencil"></i>
                                     </a>
-                                    @if (item.Category == "Nhận")
+                                    @if(item.TransactionTypeId == (int)TransactionTypeEnum.Income)
                                     {
                                         <form asp-action="DeleteTransaction" method="post" class="d-inline delete-form" id="delete-form-@item.TransactionId">
                                             <input type="hidden" name="id" value="@item.TransactionId" />
                                             <button type="button" class="btn btn-sm btn-danger delete-btn" data-form-id="delete-form-@item.TransactionId">
-                                                <i class="bi bi-trash"></i> Xóa
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
                                     }
@@ -160,8 +176,9 @@
                         endDate = Model.EndDate,
                         minAmount = Model.MinAmount,
                         maxAmount = Model.MaxAmount,
-                        category = Model.Category,
+                        categoryId = Model.CategoryId,
                         sourceAccount = Model.SourceAccount,
+                        content = Model.Content,
                         page
                     }),
                     new PagedListRenderOptions
@@ -231,7 +248,7 @@
 
         function resetForm() {
             // Chuyển hướng về Index mà không có tham số lọc
-            window.location.href = '@Url.Action("Index", "Transactions")';
+            window.location.href = '@Url.Action("Index", "TransactionsManagement")';
         }
 
         function goToPage() {

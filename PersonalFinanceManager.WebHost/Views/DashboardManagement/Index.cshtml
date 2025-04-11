@@ -9,7 +9,7 @@
 <!-- Bộ lọc thời gian -->
 <div class="row mb-3">
     <div class="col">
-        <form asp-action="Dashboard" method="get" class="d-flex flex-wrap align-items-end" id="filterForm">
+        <form asp-action="Index" asp-controller="DashboardManagement" method="get" class="d-flex flex-wrap align-items-end" id="filterForm">
             <div class="form-group me-2 mb-2">
                 <label for="startDate" class="form-label">Từ ngày:</label>
                 <input type="text" id="startDate" name="startDate" value="@Model.StartDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
@@ -53,7 +53,7 @@
     </div>
 </div>
 
-<!-- Biểu đồ -->
+<!-- Biểu đồ Transaction -->
 <div class="row mt-4">
     <div class="col-md-6">
         <h4>Phân bổ theo danh mục</h4>
@@ -72,6 +72,21 @@
     </div>
 </div>
 
+<!-- Budget -->
+<div class="row mt-4">
+    <div class="col">
+        <h4>Ngân sách</h4>
+        @if (Model.BudgetsDto != null && Model.BudgetsDto.Any())
+        {
+            <canvas id="budgetChart" width="400" height="200"></canvas>
+        }
+        else
+        {
+            <p>Chưa có ngân sách nào được thiết lập.</p>
+        }
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -80,7 +95,7 @@
             flatpickr('#startDate', {
                 dateFormat: 'd/m/Y',
                 allowInput: true,
-                defaultDate: '@Model.StartDate?.ToString("dd/MM/yyyy")', // Giá trị mặc định từ Model
+                defaultDate: '@Model.StartDate?.ToString("dd/MM/yyyy")',
                 onClose: function (selectedDates, dateStr, instance) {
                     instance.element.value = dateStr;
                 }
@@ -118,7 +133,7 @@
         }
 
             // Biểu đồ thu/chi theo tháng
-            fetch('http://localhost:8000/api/transactionsApi/monthly-summary' + '@(Model.StartDate.HasValue ? "?startDate=" + Model.StartDate.Value.ToString("yyyy-MM-dd") : "")' + '@(Model.EndDate.HasValue ? "&endDate=" + Model.EndDate.Value.ToString("yyyy-MM-dd") : "")')
+            fetch('http://localhost:8000/api/TransactionsApi/monthly-summary' + '@(Model.StartDate.HasValue ? "?startDate=" + Model.StartDate.Value.ToString("yyyy-MM-dd") : "")' + '@(Model.EndDate.HasValue ? "&endDate=" + Model.EndDate.Value.ToString("yyyy-MM-dd") : "")')
                 .then(response => response.json())
                 .then(data => {
                     var labels = Object.keys(data);
@@ -146,10 +161,7 @@
                         options: {
                             responsive: true,
                             scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: { display: true, text: 'Số tiền (VND)' }
-                                }
+                                y: { beginAtZero: true, title: { display: true, text: 'Số tiền (VND)' } }
                             },
                             plugins: {
                                 legend: { position: 'top' },
@@ -159,6 +171,50 @@
                     });
                 })
                 .catch(error => console.error('Error fetching monthly data:', error));
-                });
+                                async function loadBudgetUsage() {
+            const response = await fetch('http://localhost:8000/api/statisticsApi/budget-usage');
+            const data = await response.json();
+
+            const labels = data.map(d => d.categoryName);
+        const budgetAmounts = data.map(d => d.budgetAmount);
+        const spentAmounts = data.map(d => d.spentAmount);
+
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+                    new Chart(ctx, {
+                type: 'bar',
+                        data: {
+                    labels: labels,
+                    datasets: [
+                                {
+                            label: 'Ngân sách',
+                            data: budgetAmounts,
+                                    backgroundColor: '#36A2EB'
+                    },
+                                {
+                            label: 'Đã chi',
+                                data: spentAmounts,
+                        backgroundColor: '#FF6384'
+                    }
+                ]
+            },
+                options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: {
+                            mode: 'index',
+                                intersect: false
+                            }
+                        },
+                    scales: {
+                    y: {
+                            beginAtZero: true
+                                }
+                        }
+                        }
+                    });
+                }
+
+                loadBudgetUsage();
+    });
     </script>
 }

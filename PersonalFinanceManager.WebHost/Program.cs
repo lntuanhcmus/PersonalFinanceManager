@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Localization;
 using System.Globalization;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 // Thêm dịch vụ localization
@@ -26,6 +27,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri("http://localhost:8000/");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
 var app = builder.Build();
@@ -49,6 +51,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Transactions}/{action=Index}/{id?}");
+    pattern: "{controller=TransactionsManagement}/{action=Index}/{id?}");
 
 app.Run();

@@ -19,6 +19,6 @@ namespace PersonalFinanceManager.Shared.Models
         public decimal Balance { get; set; }
 
         [JsonPropertyName("categoryBreakdown")]
-        public Dictionary<string, decimal> CategoryBreakdown { get; set; }
+        public Dictionary<int, decimal> CategoryBreakdown { get; set; }
     }
 }

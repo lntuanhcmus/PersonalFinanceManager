@@ -9,8 +9,11 @@ namespace PersonalFinanceManager.Shared.Models
         [JsonPropertyName("id")]
         public int Id { get; set; }
 
+        [JsonPropertyName("categoryId")]
+        public int CategoryId { get; set; } // "Chi - Ăn uống", "Chi - Mua sắm", ...
+
         [JsonPropertyName("category")]
-        public string Category { get; set; } // "Chi - Ăn uống", "Chi - Mua sắm", ...
+        public Category Category { get; set; } 
 
         [JsonPropertyName("amount")]
         public decimal Amount { get; set; } // Số tiền tối đa cho ngân sách

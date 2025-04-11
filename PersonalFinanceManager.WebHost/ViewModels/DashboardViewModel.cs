@@ -1,4 +1,5 @@
-﻿using PersonalFinanceManager.Shared.Models;
+﻿using PersonalFinanceManager.Shared.Dto;
+using PersonalFinanceManager.Shared.Models;
 using System.Text.Json.Serialization;
 
 namespace PersonalFinanceManager.WebHost.Models
@@ -13,5 +14,18 @@ namespace PersonalFinanceManager.WebHost.Models
 
         [JsonPropertyName("endDate")]
         public DateTime? EndDate { get; set; }
+
+        [JsonPropertyName("transactionsDto")]
+        public List<TransactionDto> TransactionsDto { get; set; } // Thêm để tính toán chi tiêu
+
+        [JsonPropertyName("budgetsDto")]
+        public List<BudgetDto> BudgetsDto { get; set; } // Danh sách ngân sách
+    }
+
+    public class BudgetUsageViewModel
+    {
+        public string CategoryName { get; set; }
+        public decimal BudgetAmount { get; set; }
+        public decimal SpentAmount { get; set; }
     }
 }

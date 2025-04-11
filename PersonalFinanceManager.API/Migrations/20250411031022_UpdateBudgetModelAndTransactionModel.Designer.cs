@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersonalFinanceManager.API.Data;
 
@@ -11,9 +12,11 @@ using PersonalFinanceManager.API.Data;
 namespace PersonalFinanceManager.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250411031022_UpdateBudgetModelAndTransactionModel")]
+    partial class UpdateBudgetModelAndTransactionModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,43 +90,6 @@ namespace PersonalFinanceManager.API.Migrations
                     b.ToTable("Categories");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "categoryId");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Code = "LU",
-                            Name = "Lương",
-                            TransactionTypeId = 1
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Code = "TH",
-                            Name = "Thưởng",
-                            TransactionTypeId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Code = "SH",
-                            Name = "Sinh Hoạt",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Code = "HT-PT",
-                            Name = "Học Tập và Phát Triển",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Code = "GT-PS",
-                            Name = "Giải trí và Phát Sinh",
-                            TransactionTypeId = 2
-                        });
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Models.Transaction", b =>
@@ -191,11 +157,6 @@ namespace PersonalFinanceManager.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasAnnotation("Relational:JsonPropertyName", "code");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -206,20 +167,6 @@ namespace PersonalFinanceManager.API.Migrations
                     b.ToTable("TransactionTypes");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "transactionType");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Code = "Income",
-                            Name = "Thu Nhập"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Code = "Expense",
-                            Name = "Chi Trả"
-                        });
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Models.Budget", b =>

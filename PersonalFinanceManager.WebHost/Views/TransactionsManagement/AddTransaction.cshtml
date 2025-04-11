@@ -1,4 +1,4 @@
-﻿@model PersonalFinanceManager.Shared.Dto.TransactionDto
+﻿@model PersonalFinanceManager.WebHost.Models.DetailTransactionViewModel
 
 <div class="row mb-3">
     <div class="col">
@@ -41,13 +41,12 @@
                 <div class="invalid-feedback">Vui lòng nhập số tiền (chỉ nhập số, không cần VND).</div>
             </div>
             <div class="mb-3">
-                <label asp-for="Category" class="form-label">Loại giao dịch</label>
-                <select asp-for="Category" class="form-control" required>
-                    <option value="">Chọn loại giao dịch</option>
-                    <option value="Nhận">Nhận tiền</option>
-                    <option value="Chi">Chi tiền</option>
+                <label>Danh mục</label>
+                <select asp-for="CategoryId"
+                        asp-items="Model.Categories"
+                        class="form-control">
+                    <option value="">-- Chọn danh mục --</option>
                 </select>
-                <div class="invalid-feedback">Vui lòng chọn loại giao dịch.</div>
             </div>
             <div class="mb-3">
                 <label asp-for="SourceAccount" class="form-label">Tài khoản nguồn</label>
@@ -73,6 +72,12 @@
                 <button type="submit" class="btn btn-primary">Thêm giao dịch</button>
                 <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
             </div>
+
+            @*Hidden fields*@
+            <input asp-for="Categories" hidden />
+            <input asp-for="TransactionTypeId" hidden />
+            <input asp-for="TransactionTypeName" hidden />
+            <input asp-for="CategoryName" hidden />
         </form>
     </div>
 </div>

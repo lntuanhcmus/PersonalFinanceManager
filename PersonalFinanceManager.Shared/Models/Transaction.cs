@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace PersonalFinanceManager.Shared.Models
 {
+
     public class Transaction
     {
         [Key]
@@ -12,6 +13,18 @@ namespace PersonalFinanceManager.Shared.Models
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = true)]
         [JsonPropertyName("transactionTime")]
         public DateTime TransactionTime { get; set; }
+
+        [JsonPropertyName("categoryId")]
+        public int? CategoryId { get; set; }
+
+        [JsonPropertyName("categoryId")]
+        public Category Category { get; set; }
+
+        [JsonPropertyName("transactionTypeId")]
+        public int TransactionTypeId { get; set; }
+
+        [JsonPropertyName("transactionType")]
+        public TransactionType TransactionType { get; set; }
 
         [JsonPropertyName("sourceAccount")]
         public string SourceAccount { get; set; }
@@ -31,7 +44,5 @@ namespace PersonalFinanceManager.Shared.Models
         [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonPropertyName("category")]
-        public string Category { get; set; }
     }
 }
