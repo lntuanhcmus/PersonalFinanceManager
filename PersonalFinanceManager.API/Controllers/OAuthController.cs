@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using PersonalFinanceManager.API.Model;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Services;
 using System.Transactions;
@@ -10,11 +12,15 @@ namespace PersonalFinanceManager.Controllers
     {
         private readonly GmailService _gmailService;
         private readonly TransactionService _transactionService;
+        private readonly GmailServiceSettings _gmailSettings;
 
-        public OAuthController(GmailService gmailService, TransactionService transactionService)
+        public OAuthController(GmailService gmailService,
+                               TransactionService transactionService,
+                               IOptions<GmailServiceSettings> gmailOptions)
         {
             _gmailService = gmailService;
             _transactionService = transactionService;
+            _gmailSettings = gmailOptions.Value;
         }
 
         [HttpGet("callback")]
@@ -22,8 +28,12 @@ namespace PersonalFinanceManager.Controllers
         {
             try
             {
+                int maxResult = _gmailSettings.MaxResult;
+
+                // Kiểm tra hợp lệ, nếu không dùng mặc định
+                if (maxResult <= 0) maxResult = 10;
                 var credential = await _gmailService.ExchangeCodeForTokenAsync(code);
-                var transaction = await _gmailService.ExtractTransactionsAsync("credentials.json","token.json");
+                var transaction = await _gmailService.ExtractTransactionsAsync("credentials.json","token.json", maxResult);
                 if(transaction != null)
                 {
                     await _transactionService.SaveTransactions(transaction);

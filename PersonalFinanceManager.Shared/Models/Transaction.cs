@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PersonalFinanceManager.Shared.Models
@@ -43,6 +43,12 @@ namespace PersonalFinanceManager.Shared.Models
 
         [JsonPropertyName("description")]
         public string Description { get; set; }
+
+        [JsonPropertyName("relatedTransactionId")]
+        public string? RelatedTransactionId { get; set; }
+
+        [JsonPropertyName("relatedTransaction")]
+        public Transaction? RelatedTransaction { get; set; } // Navigation property
 
     }
 }

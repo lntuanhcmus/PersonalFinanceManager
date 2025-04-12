@@ -27,7 +27,7 @@ namespace PersonalFinanceManager.Shared.Services
         private static readonly string ApplicationName = "Personal Finance Manager";
         private static readonly string ExcelFilePath = "Data/transactions.xlsx";
 
-        public async Task<List<Transaction>> ExtractTransactionsAsync(string credentialsPath, string tokenPath)
+        public async Task<List<Transaction>> ExtractTransactionsAsync(string credentialsPath, string tokenPath, int maxResult = 10)
         {
             UserCredential credential;
 
@@ -89,7 +89,7 @@ namespace PersonalFinanceManager.Shared.Services
 
             var request = service.Users.Messages.List("me");
             request.Q = "from:vietcombank Biên lai chuyển tiền qua tài khoản";
-            request.MaxResults = 100;
+            request.MaxResults = maxResult;
 
             var messages = (await request.ExecuteAsync()).Messages ?? new List<Google.Apis.Gmail.v1.Data.Message>();
             var transactions = new List<Transaction>();

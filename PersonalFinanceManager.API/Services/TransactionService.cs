@@ -173,30 +173,38 @@ namespace PersonalFinanceManager.API.Services
 
         private async Task<List<Transaction>> ClassifyTransactionsAsync(List<Transaction> transactions)
         {
-            // Lấy toàn bộ categories từ DB (truy vấn 1 lần)
+
+            // Lấy toàn bộ LabelingRules từ DB
+            var labelingRules = await _context.LabelingRules.ToListAsync();
+
             var categories = await _context.Categories.ToListAsync();
 
-            // Tìm Category mặc định GT-PS (Phát sinh)
             var defaultCategory = categories.FirstOrDefault(c => c.Code == CategoryCodes.GIAI_TRI); // "GT-PS"
+            var defaultTransactionType = _context.TransactionTypes.FirstOrDefault(t => t.Code == TransactionTypeConstant.Expense);
 
             foreach (var tx in transactions)
             {
-                // Nếu Description chứa " - ", phân tách mã code
-                string[] parts = tx.Description?.Split(" - ", 2, StringSplitOptions.TrimEntries) ?? new string[0];
-                string categoryCode = parts.Length > 1 ? parts[0] : string.Empty;
-                string description = parts.Length > 1 ? parts[1] : tx.Description;
+                if (string.IsNullOrWhiteSpace(tx.Description))
+                    continue;
 
-                // Tìm Category theo mã code
-                var matchedCategory = categories.FirstOrDefault(c => c.Code == categoryCode);
+                // Tìm rule đầu tiên khớp keyword trong mô tả (case-insensitive)
+                var matchedRule = labelingRules
+                    .FirstOrDefault(rule => tx.Description.Contains(rule.Keyword, StringComparison.OrdinalIgnoreCase));
 
-                // Gán category hoặc dùng mặc định
-                tx.CategoryId = matchedCategory?.Id ?? defaultCategory?.Id ?? 0;
-
-                // Cập nhật lại phần mô tả (nếu cần loại bỏ code)
-                tx.Description = description;
+                if (matchedRule != null)
+                {
+                    tx.CategoryId = matchedRule.CategoryId;
+                    tx.TransactionTypeId = matchedRule.TransactionTypeId;
+                }
+                else
+                {
+                    tx.TransactionTypeId = defaultTransactionType.Id;
+                    tx.CategoryId = defaultCategory.Id;
+                }
             }
 
             return transactions;
+            
         }
 
         public List<TransactionType> GetTransactionTypes()

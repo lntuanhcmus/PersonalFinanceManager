@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersonalFinanceManager.API.Data;
 
@@ -11,9 +12,11 @@ using PersonalFinanceManager.API.Data;
 namespace PersonalFinanceManager.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250411161051_AddNewTransactionTypeAndRelatedTransation")]
+    partial class AddNewTransactionTypeAndRelatedTransation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,108 +126,6 @@ namespace PersonalFinanceManager.API.Migrations
                             Code = "GT-PS",
                             Name = "Giải trí và Phát Sinh",
                             TransactionTypeId = 2
-                        });
-                });
-
-            modelBuilder.Entity("PersonalFinanceManager.Shared.Models.LabelingRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Keyword")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TransactionTypeId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LabelingRules");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CategoryId = 3,
-                            Keyword = "KOVQR",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CategoryId = 5,
-                            Keyword = "LE NGUYEN TUAN chuyen khoan",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CategoryId = 3,
-                            Keyword = "603 - 60.7 UVK",
-                            TransactionTypeId = 3
-                        },
-                        new
-                        {
-                            Id = 4,
-                            CategoryId = 4,
-                            Keyword = "tien cau long",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CategoryId = 3,
-                            Keyword = "Tien Banh Mi",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 6,
-                            CategoryId = 3,
-                            Keyword = "Tien com toi",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 7,
-                            CategoryId = 3,
-                            Keyword = "Tien com trua",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 8,
-                            CategoryId = 5,
-                            Keyword = "GT-PS",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 9,
-                            CategoryId = 4,
-                            Keyword = "HT-PT",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 10,
-                            CategoryId = 3,
-                            Keyword = "SH - ",
-                            TransactionTypeId = 2
-                        },
-                        new
-                        {
-                            Id = 11,
-                            CategoryId = 1,
-                            Keyword = "Lương tháng",
-                            TransactionTypeId = 1
                         });
                 });
 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.API.Model;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Services;
 using System.Globalization;
@@ -7,6 +8,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<GmailServiceSettings>(
+    builder.Configuration.GetSection("GmailService"));
 
 // Set culture to vi-VN
 CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("vi-VN");

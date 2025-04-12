@@ -6,6 +6,8 @@ using PersonalFinanceManager.Shared.Dto;
 using System.Globalization;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.API.Model;
+using Microsoft.Extensions.Options;
 
 namespace PersonalFinanceManager.Controllers
 {
@@ -16,13 +18,18 @@ namespace PersonalFinanceManager.Controllers
         private readonly GmailService _gmailService;
         private readonly TransactionService _transactionService;
         private readonly CategoryService _categoryService;
+        private readonly GmailServiceSettings _gmailSettings;
 
 
-        public TransactionsApiController(GmailService gmailService, TransactionService transactionService, CategoryService categoryService)
+        public TransactionsApiController(GmailService gmailService,
+                                         TransactionService transactionService,
+                                         CategoryService categoryService,
+                                         IOptions<GmailServiceSettings> gmailOptions)
         {
             _gmailService = gmailService;
             _transactionService = transactionService;
             _categoryService = categoryService;
+            _gmailSettings = gmailOptions.Value;
         }
 
         //[HttpGet]
@@ -69,7 +76,12 @@ namespace PersonalFinanceManager.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshFromGmail()
         {
-            var transactions = await _gmailService.ExtractTransactionsAsync("credentials.json", "token.json");
+            int maxResult = _gmailSettings.MaxResult;
+
+            // Kiểm tra hợp lệ, nếu không dùng mặc định
+            if (maxResult <= 0) maxResult = 10;
+
+            var transactions = await _gmailService.ExtractTransactionsAsync("credentials.json", "token.json", maxResult);
             await _transactionService.SaveTransactions(transactions);
             return Ok();
         }
