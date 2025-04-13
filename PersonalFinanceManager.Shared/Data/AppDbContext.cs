@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PersonalFinanceManager.Shared.Models;
 
-namespace PersonalFinanceManager.API.Data
+namespace PersonalFinanceManager.Shared.Data
 {
     public class AppDbContext: DbContext
     {
@@ -17,16 +17,17 @@ namespace PersonalFinanceManager.API.Data
 
         public DbSet<LabelingRule> LabelingRules { get; set; }
 
+        public DbSet<RepaymentTransaction> RepaymentTransactions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Transaction - RelatedTransaction
-            modelBuilder.Entity<Transaction>()
-                .HasOne(t => t.RelatedTransaction)
-                .WithMany()
-                .HasForeignKey(t => t.RelatedTransactionId)
-                .IsRequired(false);
+            modelBuilder.Entity<RepaymentTransaction>()
+            .HasOne(rt => rt.Transaction)
+            .WithMany(t => t.RepaymentTransactions)
+            .HasForeignKey(rt => rt.TransactionId)
+            .HasPrincipalKey(t => t.TransactionId); // Rất quan trọng nếu TransactionId không phải là 'Id'
 
             modelBuilder.Entity<TransactionType>().HasData(
                 new TransactionType { Id = 1, Name = "Thu Nhập", Code = "Income" },

@@ -34,7 +34,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                         $"&endDate={(parsedEndDate.HasValue ? parsedEndDate.Value.ToString("yyyy-MM-dd") : "")}";
 
             // Lấy summary
-            var summaryResponse = await client.GetAsync($"api/TransactionsApi/summary{query}");
+            var summaryResponse = await client.GetAsync($"api/StatisticsApi/summary{query}");
             FinancialSummary summary = summaryResponse.IsSuccessStatusCode
                 ? JsonSerializer.Deserialize<FinancialSummary>(await summaryResponse.Content.ReadAsStringAsync()) ?? new FinancialSummary()
                 : new FinancialSummary();

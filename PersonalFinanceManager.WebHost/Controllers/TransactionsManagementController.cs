@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;
+using PersonalFinanceManager.WebHost.Helper;
 using PersonalFinanceManager.WebHost.Models;
 using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using X.PagedList;
 
 namespace PersonalFinanceManager.WebHost.Controllers
@@ -22,6 +24,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
         {
             _httpClientFactory = httpClientFactory;
         }
+
         [HttpGet]
         public async Task<IActionResult> Index(
             string transactionId = null,
@@ -33,8 +36,10 @@ namespace PersonalFinanceManager.WebHost.Controllers
             int? transactionTypeId = null,
             string sourceAccount = null,
             string content = null,
+            int? status = null,
             int page = 1)
         {
+
             DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
             DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
 
@@ -48,6 +53,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                         $"&transactionTypeId={transactionTypeId}" +
                         $"&sourceAccount={Uri.EscapeDataString(sourceAccount ?? "")}" +
                         $"&content={Uri.EscapeDataString(content ?? "")}" +
+                        $"&status={status}" +
                         $"&page={page}&pageSize=10";
             var response = await client.GetAsync($"api/transactionsApi{query}");
 
@@ -75,18 +81,65 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 Transactions = pagedTransactions.ToList(), // Để tương thích với view hiện tại
                 PagedTransactions = pagedTransactions, // Thêm để dùng phân trang
                 TransactionId = transactionId,
-                StartDate = startDateValue,
-                EndDate = endDateValue,
+                StartDate = startDate,
+                EndDate = endDate,
                 MinAmount = minAmount,
                 MaxAmount = maxAmount,
                 CategoryId = categoryId,
                 SourceAccount = sourceAccount,
                 Content = content,
+                Status = status,
                 Categories = await PopulateCategories(),
-                TransactionTypes = await PopulateTransctionTypes()
+                TransactionTypes = await PopulateTransctionTypes(),
+                Statuses = await PopulateStatuses(),
             };
 
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Export(
+            string transactionId = null,
+            string startDate = null,
+            string endDate = null,
+            decimal? minAmount = null,
+            decimal? maxAmount = null,
+            int? categoryId = null,
+            int? transactionTypeId = null,
+            string sourceAccount = null,
+            string content = null,
+            int? status = null,
+            int page = 1)
+        {
+            DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+            DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+            // Tạo query string
+            var client = _httpClientFactory.CreateClient("ApiClient");
+
+            var query = $"?transactionId={Uri.EscapeDataString(transactionId ?? "")}" +
+                        $"&startDate={(startDateValue.HasValue ? startDateValue.Value.ToString("yyyy-MM-dd") : "")}" +
+                        $"&endDate={(endDateValue.HasValue ? endDateValue.Value.AddDays(1).ToString("yyyy-MM-dd") : "")}" +
+                        $"&minAmount={minAmount}" +
+                        $"&maxAmount={maxAmount}" +
+                        $"&categoryId={categoryId}" +
+                        $"&transactionTypeId={transactionTypeId}" +
+                        $"&sourceAccount={Uri.EscapeDataString(sourceAccount ?? "")}" +
+                        $"&content={Uri.EscapeDataString(content ?? "")}" +
+                        $"&status={status}";
+
+            var response = await client.GetAsync($"api/transactionsApi/export{query}");
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = "Không thể xuất dữ liệu ra excel";
+                return RedirectToAction("Index");
+            }
+
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            var fileName = $"transactions_{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+            return File(fileBytes, contentType, fileName);
         }
 
         [HttpGet]
@@ -95,7 +148,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
             var model = new DetailTransactionViewModel
             {
                 TransactionTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
-                Categories = await PopulateCategories()
+                Categories = await PopulateCategories(),
+                TransactionTypes = await PopulateTransctionTypes()
             };
             return View(model);
         }
@@ -104,6 +158,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
         public async Task<IActionResult> AddTransaction(DetailTransactionViewModel model)
         {
             model.Categories = await PopulateCategories();
+            model.TransactionTypes = await PopulateTransctionTypes();
             if (ModelState.IsValid)
             {
                 if (model.Amount <= 0)
@@ -153,7 +208,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 var response = await client.PostAsync("api/transactionsApi", content);
                 if (response.IsSuccessStatusCode)
                 {
-                    return RedirectToAction("Index");
+                    TempData["Success"] = "Giao dịch đã được thêm thành công";
+                    return RedirectToAction("Index", new {SuccessMessage = "Thêm giao dịch thành công"});
                 }
                 ModelState.AddModelError("", "Không thể thêm giao dịch. Vui lòng thử lại.");
             }
@@ -167,7 +223,6 @@ namespace PersonalFinanceManager.WebHost.Controllers
             var client = _httpClientFactory.CreateClient("ApiClient");
             var response = await client.GetAsync($"api/transactionsApi/get-by-id?id={id}");
             if (response.IsSuccessStatusCode)
-            
             {
                 var json = await response.Content.ReadAsStringAsync();
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -177,6 +232,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
                     CategoryId = transaction.CategoryId,
                     Amount = transaction.Amount,
                     Categories = await PopulateCategories(),
+                    TransactionTypes = await PopulateTransctionTypes(),
+                    Statuses = await PopulateStatuses(),
                     Description = transaction.Description,
                     RecipientAccount = transaction.RecipientAccount,
                     RecipientBank = transaction.RecipientBank,
@@ -186,7 +243,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
                     TransactionTime = transaction.TransactionTime,
                     TransactionTypeId = transaction.TransactionTypeId,
                     TransactionTypeName = transaction.TransactionTypeName,
-                    CategoryName = transaction.CategoryName
+                    CategoryName = transaction.CategoryName,
+                    Status = transaction.Status,
                 };
                 if (transaction != null)
                 {
@@ -200,6 +258,9 @@ namespace PersonalFinanceManager.WebHost.Controllers
         [HttpPost]
         public async Task<IActionResult> EditTransaction(DetailTransactionViewModel model)
         {
+            model.TransactionTypes = await PopulateTransctionTypes();
+            model.Categories = await PopulateCategories();
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -219,7 +280,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 TransactionTypeId = model.TransactionTypeId,
                 CategoryId = model.CategoryId,
                 CategoryName = model.CategoryName,
-                TransactionTypeName = model.TransactionTypeName
+                TransactionTypeName = model.TransactionTypeName,
+                Status = model.Status
             };
 
             var client = _httpClientFactory.CreateClient("ApiClient");
@@ -250,6 +312,25 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 TempData["Error"] = "Lỗi khi xóa giao dịch";
             }
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRepaymentTransaction(string id)
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.GetAsync($"api/repaymentTransactionsApi/?transactionId={id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var transaction = JsonSerializer.Deserialize<RepaymentTransactionDto>(json, options);
+                if (transaction != null)
+                {
+                    return Ok(transaction);
+                }
+            }
+
+            return Ok();
         }
 
         public async Task<IActionResult> RefreshFromGmail()
@@ -293,6 +374,12 @@ namespace PersonalFinanceManager.WebHost.Controllers
             }).ToList();
 
             return categoriesResult;
+
+        }
+
+        private async Task<List<SelectListItem>> PopulateStatuses()
+        {
+            return EnumHelper.GetSelectListWithValue<TransactionStatusEnum>();
 
         }
 

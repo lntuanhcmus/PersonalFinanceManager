@@ -1,6 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using System.Collections.Generic;
-using PersonalFinanceManager.Shared.Models;
 using X.PagedList;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PersonalFinanceManager.Shared.Dto;
@@ -19,10 +17,10 @@ namespace PersonalFinanceManager.WebHost.Models
         public string TransactionId { get; set; }
 
         [JsonPropertyName("startDate")]
-        public DateTime? StartDate { get; set; }
+        public string? StartDate { get; set; }
 
         [JsonPropertyName("endDate")]
-        public DateTime? EndDate { get; set; }
+        public string? EndDate { get; set; }
 
         [JsonPropertyName("minAmount")]
         public decimal? MinAmount { get; set; }
@@ -32,6 +30,9 @@ namespace PersonalFinanceManager.WebHost.Models
 
         [JsonPropertyName("sourceAccount")]
         public string SourceAccount { get; set; }
+
+        [JsonPropertyName("status")]
+        public int? Status { get; set; }
 
         [JsonPropertyName("content")]
         public string Content { get; set; }
@@ -47,6 +48,9 @@ namespace PersonalFinanceManager.WebHost.Models
 
         [JsonPropertyName("transactionTypes")]
         public List<SelectListItem> TransactionTypes { get; set; }
+
+        [JsonPropertyName("transactionTypes")]
+        public List<SelectListItem>? Statuses { get; set; }
 
     }
 }

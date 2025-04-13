@@ -1,6 +1,7 @@
 ﻿@using System.Globalization
 @model PersonalFinanceManager.WebHost.Models.TransactionsViewModel
 @using PersonalFinanceManager.Shared.Enum
+@using PersonalFinanceManager.WebHost.Helper
 @using X.PagedList.Mvc.Core
 @using X.PagedList.Extensions
 
@@ -44,11 +45,11 @@
                 </div>
                 <div class="form-group mb-2 col-2">
                     <label for="startDate" class="form-label">Từ ngày:</label>
-                    <input type="text" id="startDate" name="startDate" value="@Model.StartDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
+                    <input type="text" id="startDate" name="startDate" value="@Model.StartDate" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
                 </div>
                 <div class="form-group mb-2 col-2">
                     <label for="endDate" class="form-label">Đến ngày:</label>
-                    <input type="text" id="endDate" name="endDate" value="@Model.EndDate?.ToString("dd/MM/yyyy")" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
+                    <input type="text" id="endDate" name="endDate" value="@Model.EndDate" class="form-control form-control-sm" placeholder="Chọn ngày" autocomplete="off" />
                 </div>
                 <div class="form-group mb-2 col-2">
                     <label for="minAmount" class="form-label">Số tiền từ:</label>
@@ -78,6 +79,14 @@
                     </select>
                 </div>
                 <div class="form-group mb-2 col-2">
+                    <label for="category" class="form-label">Trạng thái:</label>
+                    <select asp-for="Status"
+                            asp-items="Model.Statuses"
+                            class="form-control form-control-sm">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                </div>
+                <div class="form-group mb-2 col-2">
                     <label for="sourceAccount" class="form-label">TK nguồn:</label>
                     <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control form-control-sm" autocomplete="off" />
                 </div>
@@ -88,6 +97,9 @@
                 <div class="form-group mb-2 col-4" style="display: flex; flex-direction: row; padding: 10px; margin-top: 20px;">
                     <button type="submit" class="btn btn-primary btn-sm">Tìm kiếm</button>
                     <button type="button" class="btn btn-secondary btn-sm" style="margin-left: 15px" onclick="resetForm()">Xóa bộ lọc</button>
+                    <button type="submit" formaction="@Url.Action("Export")" formmethod="get" class="btn btn-success btn-sm ms-2">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Xuất Excel
+                    </button>
                 </div>
             </div>
         </form>
@@ -102,24 +114,27 @@
                     <tr>
                         <th>STT</th>
                         <th>Thời gian giao dịch</th>
-                        <th>Số lệnh giao dịch</th>
-                        <th>Tài khoản nguồn</th>
-                        <th>Tài khoản người hưởng</th>
-                        <th>Tên người hưởng</th>
-                        <th>Tên ngân hàng hưởng</th>
-                        <th>Số tiền</th>
+                        <th>Mã giao dịch</th>
+                        <th>Nguồn gửi</th>
+                        <th>Nguồn nhận</th>
+                        <th>Người Nhận</th>
+                        <th>Tổng tiền</th>
+                        <th>Số chi thực</th>
                         <th>Nội dung</th>
                         <th>Loại giao dịch</th>
                         <th>Mục đích giao dịch</th>
+                        <th>Trạng Thái</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model != null && Model.Transactions.Any())
                     {
+                        
                         int index = 1;
                         foreach (var item in Model.Transactions)
                         {
+                            decimal actualAmt = item.Amount - item.RepaymentAmount;
                             <tr>
                                 <td>@index</td>
                                 <td>@item.TransactionTime</td>
@@ -127,18 +142,27 @@
                                 <td>@item.SourceAccount</td>
                                 <td>@item.RecipientAccount</td>
                                 <td>@item.RecipientName</td>
-                                <td>@item.RecipientBank</td>
                                 <td>@item.Amount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND</td>
+                                <td>@actualAmt.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND</td>
                                 <td>@item.Description</td>
+                                <td>@item.TransactionTypeName</td>
+                                <td>@item.CategoryName</td>
                                 <td>
-                                    <span class="badge @(item.TransactionTypeId == (int)TransactionTypeEnum.Income ? "bg-success" : "bg-warning")">
-                                        @item.TransactionTypeName
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge @(item.TransactionTypeId == (int)TransactionTypeEnum.Income ? "bg-success" : "bg-warning")">
-                                        @item.CategoryName
-                                    </span>
+                                    @if (item.Status == (int)TransactionStatusEnum.Pending)
+                                    {
+                                        var displayStatus = EnumHelper.GetDisplayName<TransactionStatusEnum>(TransactionStatusEnum.Pending);
+                                        <span class="badge bg-warning">@displayStatus</span>
+                                    }
+                                    @if (item.Status == (int)TransactionStatusEnum.Success)
+                                    {
+                                        var displayStatus = EnumHelper.GetDisplayName<TransactionStatusEnum>(TransactionStatusEnum.Success);
+                                        <span class="badge bg-success">@displayStatus</span>
+                                    }
+                                    @if (item.Status == (int)TransactionStatusEnum.Failed)
+                                    {
+                                        var displayStatus = EnumHelper.GetDisplayName<TransactionStatusEnum>(TransactionStatusEnum.Failed);
+                                        <span class="badge bg-error">@displayStatus</span>
+                                    }
                                 </td>
                                 <td>
                                     <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })" class="btn btn-sm btn-primary mb-2">

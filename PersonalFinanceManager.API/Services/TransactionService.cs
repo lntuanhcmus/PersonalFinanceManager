@@ -1,9 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
+using PersonalFinanceManager.API.Helper;
 using PersonalFinanceManager.Shared.Constants;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;
+using System.Globalization;
+using System.Text;
 
 namespace PersonalFinanceManager.API.Services
 {
@@ -33,42 +36,12 @@ namespace PersonalFinanceManager.API.Services
             int? transactionTypeId,
             string sourceAccount,
             string content,
+            int? status,
             int? page,
             int? pageSize)
         {
-            var query = _context.Transactions
-                .AsNoTracking()
-                .Include(t => t.TransactionType)
-                .Include(t => t.Category)
-                .AsQueryable();
-
-            // Apply filters
-            if (!string.IsNullOrEmpty(transactionId))
-                query = query.Where(t => t.TransactionId.Contains(transactionId));
-
-            if (startDate.HasValue)
-                query = query.Where(t => t.TransactionTime >= startDate.Value);
-
-            if (endDate.HasValue)
-                query = query.Where(t => t.TransactionTime <= endDate.Value);
-
-            if (minAmount.HasValue)
-                query = query.Where(t => t.Amount >= minAmount.Value);
-
-            if (maxAmount.HasValue)
-                query = query.Where(t => t.Amount <= maxAmount.Value);
-
-            if (!string.IsNullOrEmpty(sourceAccount))
-                query = query.Where(t => t.SourceAccount.Contains(sourceAccount));
-
-            if (!string.IsNullOrEmpty(content))
-                query = query.Where(t => t.Description.Contains(content));
-
-            if (categoryId.HasValue)
-                query = query.Where(t => t.CategoryId == categoryId);
-
-            if (transactionTypeId.HasValue)
-                query = query.Where(t => t.TransactionTypeId == transactionTypeId);
+            var query = ApplyTransactionFilters(transactionId, startDate, endDate, minAmount, maxAmount,
+                                                categoryId, transactionTypeId, sourceAccount, content, status);
 
             // Lấy tổng số phần tử trước phân trang
             var totalItems = await query.CountAsync();
@@ -98,7 +71,9 @@ namespace PersonalFinanceManager.API.Services
                     TransactionTime = x.TransactionTime.ToString("dd/MM/yyyy HH:mm"),
                     TransactionTypeId = x.TransactionTypeId,
                     CategoryName = x.Category != null ? x.Category.Name : null,
-                    TransactionTypeName = x.TransactionType != null ? x.TransactionType.Name : null
+                    TransactionTypeName = x.TransactionType != null ? x.TransactionType.Name : null,
+                    Status = x.Status,
+                    RepaymentAmount = x.RepaymentAmount,
                 })
                 .ToListAsync();
 
@@ -112,6 +87,104 @@ namespace PersonalFinanceManager.API.Services
             };
         }
 
+        public async Task<byte[]> ExportFilteredTransactionsAsCsvAsync(
+            string transactionId,
+            DateTime? startDate,
+            DateTime? endDate,
+            decimal? minAmount,
+            decimal? maxAmount,
+            int? categoryId,
+            int? transactionTypeId,
+            string sourceAccount,
+            string content,
+            int? status)
+        {
+            var query = ApplyTransactionFilters(transactionId, startDate, endDate, minAmount, maxAmount,
+                                                categoryId, transactionTypeId, sourceAccount, content, status)
+                                                .OrderByDescending(t => t.TransactionTime);
+
+            var transactions = await query.ToListAsync();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TransactionId,TransactionTime,Amount,ActualAmount,SourceAccount,Description,Category,Type,Status");
+
+            foreach (var t in transactions)
+            {
+                // Format tiền với dấu chấm, loại bỏ phần thập phân nếu không cần
+                string amountStr = t.Amount.ToString("0.##", CultureInfo.InvariantCulture);
+                string actualAmountStr = (t.Amount - t.RepaymentAmount).ToString("0.##", CultureInfo.InvariantCulture);
+
+                // Escape dấu phẩy trong mô tả nếu có
+                string description = t.Description?.Replace(",", " ") ?? "";
+                string category = t.Category?.Name?.Replace(",", " ") ?? "";
+                string type = t.TransactionType?.Name?.Replace(",", " ") ?? "";
+
+                sb.AppendLine($"{t.TransactionId}," +
+                              $"{t.TransactionTime:dd/MM/yyyy HH:mm}," +
+                              $"{amountStr}," +
+                              $"{actualAmountStr}," +
+                              $"{t.SourceAccount}," +
+                              $"{description}," +
+                              $"{category}," +
+                              $"{type}," +
+                              $"{t.Status}");
+            }
+
+            // UTF-8 with BOM để Excel hiểu đúng encoding tiếng Việt
+            return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        }
+
+        private IQueryable<Transaction> ApplyTransactionFilters(
+            string transactionId,
+            DateTime? startDate,
+            DateTime? endDate,
+            decimal? minAmount,
+            decimal? maxAmount,
+            int? categoryId,
+            int? transactionTypeId,
+            string sourceAccount,
+            string content,
+            int? status)
+        {
+            var query = _context.Transactions
+                .AsNoTracking()
+                .Include(t => t.TransactionType)
+                .Include(t => t.Category)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(transactionId))
+                query = query.Where(t => t.TransactionId.Contains(transactionId));
+
+            if (startDate.HasValue)
+                query = query.Where(t => t.TransactionTime >= startDate.Value);
+
+            if (endDate.HasValue)
+                query = query.Where(t => t.TransactionTime <= endDate.Value);
+
+            if (minAmount.HasValue)
+                query = query.Where(t => t.Amount >= minAmount.Value);
+
+            if (maxAmount.HasValue)
+                query = query.Where(t => t.Amount <= maxAmount.Value);
+
+            if (!string.IsNullOrEmpty(sourceAccount))
+                query = query.Where(t => t.SourceAccount.Contains(sourceAccount));
+
+            if (!string.IsNullOrEmpty(content))
+                query = query.Where(t => t.Description.Contains(content));
+
+            if (categoryId.HasValue)
+                query = query.Where(t => t.CategoryId == categoryId);
+
+            if (transactionTypeId.HasValue)
+                query = query.Where(t => t.TransactionTypeId == transactionTypeId);
+
+            if (status.HasValue)
+                query = query.Where(t => t.Status == status);
+
+            return query;
+        }
+
         public Transaction GetById(string id)
         {
             return _context.Transactions.Include(x=>x.TransactionType).Include(x=>x.Category).FirstOrDefault(x=>x.TransactionId == id);
@@ -120,21 +193,48 @@ namespace PersonalFinanceManager.API.Services
         public async Task<FinancialSummary> GetFinancialSummaryAsync(DateTime? startDate, DateTime? endDate)
         {
             var transactions = await _context.Transactions
+                .Include(t => t.RepaymentTransactions) // để tránh truy vấn lại trong vòng lặp
                 .Where(t => (!startDate.HasValue || t.TransactionTime >= startDate) &&
                             (!endDate.HasValue || t.TransactionTime <= endDate))
                 .ToListAsync();
 
-            var summary = new FinancialSummary
-            {
-                TotalIncome = transactions.Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Income).Sum(t => t.Amount),
-                TotalExpense = transactions.Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Expense).Sum(t => t.Amount),
-                Balance = transactions.Sum(t => t.TransactionTypeId == (int)TransactionTypeEnum.Income ? t.Amount : -t.Amount),
-                CategoryBreakdown = transactions
-                    .GroupBy(t => t.TransactionTypeId)
-                    .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount))
-            };
+            var totalIncome = transactions
+                .Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Income)
+                .Sum(t => t.Amount);
 
-            return summary;
+            var totalAdvance = transactions
+                .Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Advance)
+                .Sum(t =>
+                {
+                    if (t.Status == (int)TransactionStatusEnum.Success)
+                    {
+                        var repayment = t.RepaymentTransactions?.Sum(r => r.Amount) ?? 0;
+                        return t.Amount - repayment;
+                    }
+                    return t.Amount;
+                });
+
+            var totalExpense = TransactionHelper.CalculateActualExpense(
+                transactions,
+                (int)TransactionTypeEnum.Expense,
+                (int)TransactionTypeEnum.Advance,
+                (int)TransactionStatusEnum.Success
+            );
+
+            var balance = totalIncome - totalExpense;
+
+            var categoryBreakdown = transactions
+                .GroupBy(t => t.TransactionTypeId)
+                .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount));
+
+            return new FinancialSummary
+            {
+                TotalIncome = totalIncome,
+                TotalExpense = totalExpense,
+                TotalAdvance = totalAdvance,
+                Balance = balance,
+                CategoryBreakdown = categoryBreakdown
+            };
         }
 
         public async Task AddTransaction(Transaction transaction)
@@ -179,7 +279,7 @@ namespace PersonalFinanceManager.API.Services
 
             var categories = await _context.Categories.ToListAsync();
 
-            var defaultCategory = categories.FirstOrDefault(c => c.Code == CategoryCodes.GIAI_TRI); // "GT-PS"
+            var defaultCategory = categories.FirstOrDefault(c => c.Code == CategoryCodes.SINH_HOAT); // "GT-PS"
             var defaultTransactionType = _context.TransactionTypes.FirstOrDefault(t => t.Code == TransactionTypeConstant.Expense);
 
             foreach (var tx in transactions)
@@ -201,6 +301,7 @@ namespace PersonalFinanceManager.API.Services
                     tx.TransactionTypeId = defaultTransactionType.Id;
                     tx.CategoryId = defaultCategory.Id;
                 }
+                tx.Status = tx.TransactionTypeId == (int)TransactionTypeEnum.Advance ? tx.Status = (int)TransactionStatusEnum.Pending : tx.Status = (int)TransactionStatusEnum.Success;
             }
 
             return transactions;

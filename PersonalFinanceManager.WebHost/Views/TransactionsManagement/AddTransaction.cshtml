@@ -42,6 +42,15 @@
             </div>
             <div class="mb-3">
                 <label>Danh mục</label>
+                <select asp-for="TransactionTypeId"
+                        asp-items="Model.TransactionTypes"
+                        class="form-control">
+                    <option value="">-- Chọn phân loại giao dịch --</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Danh mục</label>
                 <select asp-for="CategoryId"
                         asp-items="Model.Categories"
                         class="form-control">
@@ -78,6 +87,7 @@
             <input asp-for="TransactionTypeId" hidden />
             <input asp-for="TransactionTypeName" hidden />
             <input asp-for="CategoryName" hidden />
+            <input asp-for="Status" hidden />
         </form>
     </div>
 </div>

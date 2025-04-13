@@ -44,11 +44,14 @@ namespace PersonalFinanceManager.Shared.Models
         [JsonPropertyName("description")]
         public string Description { get; set; }
 
-        [JsonPropertyName("relatedTransactionId")]
-        public string? RelatedTransactionId { get; set; }
+        [JsonPropertyName("repayment")]
+        public decimal RepaymentAmount { get; set; } = 0;
 
-        [JsonPropertyName("relatedTransaction")]
-        public Transaction? RelatedTransaction { get; set; } // Navigation property
+        [JsonPropertyName("status")]
+        public int Status { get; set; } = 1;
+
+
+        public ICollection<RepaymentTransaction> RepaymentTransactions { get; set; }
 
     }
 }

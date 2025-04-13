@@ -5,6 +5,11 @@ namespace PersonalFinanceManager.WebHost.Models
 {
     public class DetailTransactionViewModel: TransactionDto
     {
-        public List<SelectListItem> Categories { get; set; }
+        public List<SelectListItem>? Categories { get; set; }
+
+        public List<SelectListItem>? TransactionTypes { get; set; }
+
+        public List<SelectListItem>? Statuses { get; set; }
+
     }
 }

@@ -51,6 +51,18 @@ namespace PersonalFinanceManager.WebHost.Helper
                 })
                 .ToList();
         }
+
+        public static List<SelectListItem> GetSelectListWithValue<TEnum>() where TEnum : Enum
+        {
+            return Enum.GetValues(typeof(TEnum))
+                .Cast<TEnum>()
+                .Select(e => new SelectListItem
+                {
+                    Value = Convert.ToInt32(e).ToString(),
+                    Text = GetDisplayName(e)
+                })
+                .ToList();
+        }
     }
 
 }

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-PersonalFinanceManager.Sheduler.Host-4ac858c3-b42f-4cbf-8a0e-1196f42fe95a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="9.0.4" />
+    <PackageReference Include="Quartz" Version="3.14.0" />
+    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PersonalFinanceManager.ScheduleJob\PersonalFinanceManager.Scheduler.csproj" />
+    <ProjectReference Include="..\PersonalFinanceManager.Shared\PersonalFinanceManager.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\credentials.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\token.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿using PersonalFinanceManager.API.Data;
+﻿using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Models;
 
 namespace PersonalFinanceManager.API.Services

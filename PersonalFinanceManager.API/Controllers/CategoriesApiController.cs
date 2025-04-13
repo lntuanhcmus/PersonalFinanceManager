@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Models;
 
 namespace PersonalFinanceManager.API.Controllers

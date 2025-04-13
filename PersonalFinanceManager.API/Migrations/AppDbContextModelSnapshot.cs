@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
 
 #nullable disable
 
@@ -228,6 +228,42 @@ namespace PersonalFinanceManager.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PersonalFinanceManager.Shared.Models.RepaymentTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("TransactionTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId");
+
+                    b.ToTable("RepaymentTransactions");
+                });
+
             modelBuilder.Entity("PersonalFinanceManager.Shared.Models.Transaction", b =>
                 {
                     b.Property<string>("TransactionId")
@@ -262,14 +298,18 @@ namespace PersonalFinanceManager.API.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasAnnotation("Relational:JsonPropertyName", "recipientName");
 
-                    b.Property<string>("RelatedTransactionId")
-                        .HasColumnType("nvarchar(450)")
-                        .HasAnnotation("Relational:JsonPropertyName", "relatedTransactionId");
+                    b.Property<decimal>("RepaymentAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasAnnotation("Relational:JsonPropertyName", "repayment");
 
                     b.Property<string>("SourceAccount")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasAnnotation("Relational:JsonPropertyName", "sourceAccount");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasAnnotation("Relational:JsonPropertyName", "status");
 
                     b.Property<DateTime>("TransactionTime")
                         .HasColumnType("datetime2")
@@ -283,13 +323,9 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("RelatedTransactionId");
-
                     b.HasIndex("TransactionTypeId");
 
                     b.ToTable("Transactions");
-
-                    b.HasAnnotation("Relational:JsonPropertyName", "relatedTransaction");
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Models.TransactionType", b =>
@@ -355,15 +391,22 @@ namespace PersonalFinanceManager.API.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("PersonalFinanceManager.Shared.Models.RepaymentTransaction", b =>
+                {
+                    b.HasOne("PersonalFinanceManager.Shared.Models.Transaction", "Transaction")
+                        .WithMany("RepaymentTransactions")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Transaction");
+                });
+
             modelBuilder.Entity("PersonalFinanceManager.Shared.Models.Transaction", b =>
                 {
                     b.HasOne("PersonalFinanceManager.Shared.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId");
-
-                    b.HasOne("PersonalFinanceManager.Shared.Models.Transaction", "RelatedTransaction")
-                        .WithMany()
-                        .HasForeignKey("RelatedTransactionId");
 
                     b.HasOne("PersonalFinanceManager.Shared.Models.TransactionType", "TransactionType")
                         .WithMany()
@@ -373,9 +416,12 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.Navigation("Category");
 
-                    b.Navigation("RelatedTransaction");
-
                     b.Navigation("TransactionType");
+                });
+
+            modelBuilder.Entity("PersonalFinanceManager.Shared.Models.Transaction", b =>
+                {
+                    b.Navigation("RepaymentTransactions");
                 });
 #pragma warning restore 612, 618
         }

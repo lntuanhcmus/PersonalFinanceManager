@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Dto;
-using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
 

@@ -38,6 +38,10 @@ namespace PersonalFinanceManager.Shared.Dto
             TransactionTypeName = transaction.TransactionType?.Name;
 
             CategoryName = transaction.Category?.Name;
+
+            Status = transaction.Status;
+
+            RepaymentAmount = transaction.RepaymentAmount;
         }
         public string TransactionId { get; set; }
 
@@ -53,6 +57,8 @@ namespace PersonalFinanceManager.Shared.Dto
 
         public decimal Amount { get; set; }
 
+        public decimal RepaymentAmount { get; set; }
+
         public string Description { get; set; }
 
         public int? CategoryId { get; set; }
@@ -62,5 +68,7 @@ namespace PersonalFinanceManager.Shared.Dto
         public string? TransactionTypeName { get; set; }
 
         public string? CategoryName { get; set; }
+
+        public int Status { get; set; }
     }
 }

@@ -15,6 +15,9 @@ namespace PersonalFinanceManager.Shared.Models
         [JsonPropertyName("totalExpense")]
         public decimal TotalExpense { get; set; }
 
+        [JsonPropertyName("totalAdvance")]
+        public decimal TotalAdvance { get; set; }
+
         [JsonPropertyName("balance")]
         public decimal Balance { get; set; }
 

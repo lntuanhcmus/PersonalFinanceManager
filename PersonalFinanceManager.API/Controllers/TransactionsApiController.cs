@@ -5,7 +5,7 @@ using PersonalFinanceManager.Shared.Models;
 using PersonalFinanceManager.Shared.Dto;
 using System.Globalization;
 using PersonalFinanceManager.Shared.Enum;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.API.Model;
 using Microsoft.Extensions.Options;
 
@@ -32,12 +32,6 @@ namespace PersonalFinanceManager.Controllers
             _gmailSettings = gmailOptions.Value;
         }
 
-        //[HttpGet]
-        //public ActionResult<List<Transaction>> Get()
-        //{
-        //    return Ok(_transactionService.GetTransactions());
-        //}
-
         [HttpGet]
         public async Task<ActionResult<PagedResponse<TransactionDto>>> GetTransactions(
             string transactionId = null,
@@ -49,12 +43,13 @@ namespace PersonalFinanceManager.Controllers
             int? transactionTypeId = null,
             string sourceAccount = null,
             string content = null,
+            int? status = null,
             int? page = 1,
             int? pageSize = 10)
         {
             var result = await _transactionService.GetFilteredTransactionsAsync(
                 transactionId, startDate, endDate, minAmount, maxAmount,
-                categoryId, transactionTypeId, sourceAccount, content, page, pageSize);
+                categoryId, transactionTypeId, sourceAccount, content, status, page, pageSize);
 
             return Ok(result);
         }
@@ -104,10 +99,10 @@ namespace PersonalFinanceManager.Controllers
                     RecipientBank = transactionDto.RecipientBank,
                     Amount = transactionDto.Amount,
                     Description = transactionDto.Description,
-                    CategoryId = transactionDto.CategoryId
+                    CategoryId = transactionDto.CategoryId,
+                    TransactionTypeId = transactionDto.TransactionTypeId,
+                    Status = transactionDto.TransactionTypeId == (int)TransactionTypeEnum.Advance ? (int)TransactionStatusEnum.Pending : (int)TransactionStatusEnum.Success,
                 };
-
-                transaction = await ClassifyTransactionTypeByCategory(transactionDto.CategoryId, transaction);
 
                 await _transactionService.AddTransaction(transaction);
                 return Ok();
@@ -137,8 +132,8 @@ namespace PersonalFinanceManager.Controllers
             transaction.Amount = transactionDto.Amount;
             transaction.Description = transactionDto.Description;
             transaction.CategoryId = transactionDto.CategoryId;
-
-            transaction = await ClassifyTransactionTypeByCategory(transactionDto.CategoryId, transaction);
+            transaction.TransactionTypeId = transactionDto.TransactionTypeId;
+            transaction.Status = transactionDto.Status;
 
             await _transactionService.UpdateTransaction(transaction);
             return Ok();
@@ -157,33 +152,6 @@ namespace PersonalFinanceManager.Controllers
             return Ok();
         }
 
-        [HttpGet("summary")]
-        public async Task<ActionResult<FinancialSummary>> GetFinancialSummary(DateTime? startDate, DateTime? endDate)
-        {
-            var summary = await _transactionService.GetFinancialSummaryAsync(startDate, endDate);
-            return Ok(summary);
-        }
-
-        [HttpGet("monthly-summary")]
-        public async Task<ActionResult<Dictionary<string, MonthlySummary>>> GetMonthlySummary(DateTime? startDate, DateTime? endDate)
-        {
-            var transactions = _transactionService.GetTransactions()
-                .Where(t => (!startDate.HasValue || t.TransactionTime >= startDate) &&
-                            (!endDate.HasValue || t.TransactionTime <= endDate)).ToList();
-
-            var monthlyData = transactions
-                .GroupBy(t => t.TransactionTime.ToString("yyyy-MM"))
-                .ToDictionary(
-                    g => g.Key,
-                    g => new MonthlySummary
-                    {
-                        Income = g.Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Income).Sum(t => t.Amount),
-                        Expense = g.Where(t => t.TransactionTypeId == (int)TransactionTypeEnum.Expense).Sum(t => t.Amount)
-                    });
-
-            return Ok(monthlyData);
-        }
-
         [HttpGet("get-transaction-types")]
         public async Task<ActionResult<List<TransactionType>>> GetTransactionTypes()
         {
@@ -192,19 +160,47 @@ namespace PersonalFinanceManager.Controllers
             return Ok(transactionTypes);
         }
 
-
-        private async Task<Transaction> ClassifyTransactionTypeByCategory(int? categoryId, Transaction transaction)
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportTransactions(
+            string transactionId = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            decimal? minAmount = null,
+            decimal? maxAmount = null,
+            int? categoryId = null,
+            int? transactionTypeId = null,
+            string sourceAccount = null,
+            string content = null,
+            int? status = null)
         {
-            if (categoryId.HasValue)
-            {
-                var category = await _categoryService.GetByIdAsync(categoryId.Value);
-                if (category == null)
-                    return null;
+            var fileBytes = await _transactionService.ExportFilteredTransactionsAsCsvAsync(
+                transactionId, startDate, endDate, minAmount, maxAmount,
+                categoryId, transactionTypeId, sourceAccount, content, status);
 
-                transaction.TransactionTypeId = category.TransactionTypeId;
-            }
-
-            return transaction;
+            var fileName = $"transactions_{DateTime.Now:yyyyMMddHHmmss}.csv";
+            return File(fileBytes, "text/csv", fileName);
         }
+
+        //private async Task<Transaction> ClassifyTransactionTypeByCategory(int? categoryId, Transaction transaction)
+        //{
+        //    if (categoryId.HasValue)
+        //    {
+        //        var category = await _categoryService.GetByIdAsync(categoryId.Value);
+        //        if (category == null)
+        //            return null;
+
+        //        transaction.TransactionTypeId = category.TransactionTypeId;
+        //    }
+
+        //    return transaction;
+        //}
+
+
+
+        //Statistic Api
+
+
+
+
     }
 }

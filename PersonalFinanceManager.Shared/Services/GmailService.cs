@@ -31,19 +31,6 @@ namespace PersonalFinanceManager.Shared.Services
         {
             UserCredential credential;
 
-            //// Khởi tạo credential với FileDataStore
-            //using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
-            //{
-            //    var receiver = new LocalServerCodeReceiver(8000); // Port cố định
-            //    credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-            //        GoogleClientSecrets.FromStream(stream).Secrets,
-            //        Scopes,
-            //        "user",
-            //        CancellationToken.None,
-            //        new FileDataStore(tokenPath, true),
-            //        receiver);
-            //}
-
             TokenResponse token = null;
             if (File.Exists(tokenPath))
             {
@@ -61,13 +48,14 @@ namespace PersonalFinanceManager.Shared.Services
                 });
 
                 // Nếu không có token hoặc token hết hạn, yêu cầu xác thực mới
-                if (token == null || IsTokenExpired(token))
+                if (token == null)
                 {
                     credential = await AuthorizeManually(flow, tokenPath);
                 }
                 else
                 {
                     credential = new UserCredential(flow, "user", token);
+                    Console.WriteLine("Refresh Token: " + token.RefreshToken);
                     // Kiểm tra và refresh token nếu cần
                     if (credential.Token.IsExpired(flow.Clock))
                     {
@@ -127,29 +115,46 @@ namespace PersonalFinanceManager.Shared.Services
                     RecipientBank = result["Tên ngân hàng hưởng"],
                     Amount = decimal.Parse(result["Số tiền"].Replace(" VND", "").Replace(",", ""), CultureInfo.InvariantCulture),
                     Description = result["Nội dung chuyển tiền"],
-                    TransactionTypeId = (int)TransactionTypeEnum.Expense
+                    TransactionTypeId = (int)TransactionTypeEnum.Expense,
+                    Status = (int)TransactionStatusEnum.Success
                 });
             }
 
             return transactions;
-            
-            //workbook.SaveAs(ExcelFilePath);
-            //Console.WriteLine("Giao dịch đã được lưu vào " + ExcelFilePath);
         }
 
         // Xác thực thủ công và lưu token
         private async Task<UserCredential> AuthorizeManually(GoogleAuthorizationCodeFlow flow, string TokenFilePath)
         {
-            var authUrl = flow.CreateAuthorizationCodeRequest("http://localhost:8000/oauth/callback").Build();
+            var authUrl = flow.CreateAuthorizationCodeRequest("http://localhost:8000/oauth/callback");
+            var baseUrl = authUrl.Build().ToString();
+
+            // Kiểm tra kỹ: không nên nối thêm nếu baseUrl đã chứa access_type
+            // Nếu không chắc, bạn có thể dùng URI builder để xử lý an toàn hơn
+            string finalUrl = baseUrl.Contains("access_type=")
+                ? baseUrl
+                : baseUrl + "&access_type=offline";
+
+            finalUrl = finalUrl.Contains("&prompt=") ? finalUrl : finalUrl + "&prompt=consent";
+
             Console.WriteLine("Mở URL sau để cấp quyền:");
-            Console.WriteLine(authUrl.ToString());
-            Console.WriteLine("Nhập code từ trình duyệt:");
-            Console.Write("Code: ");
+            Console.WriteLine(finalUrl);
+            // Nhập mã xác thực từ trình duyệt
+            Console.Write("Nhập mã xác thực: ");
             string code = Console.ReadLine();
 
-            var token = await flow.ExchangeCodeForTokenAsync("user", code, "http://localhost:8000/oauth/callback", CancellationToken.None);
+            // Đổi mã xác thực lấy token
+            var token = await flow.ExchangeCodeForTokenAsync(
+                "user",
+                code,
+                "http://localhost:8000/oauth/callback", // Phải giống tuyệt đối
+                CancellationToken.None
+            );
+
+            // Lưu token
             await SaveTokenManually(token, TokenFilePath);
 
+            // Trả về thông tin xác thực
             return new UserCredential(flow, "user", token);
         }
 

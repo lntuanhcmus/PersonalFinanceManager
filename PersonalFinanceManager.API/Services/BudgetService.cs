@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;

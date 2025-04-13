@@ -17,9 +17,6 @@ namespace PersonalFinanceManager.Shared.Enum
         Expense = 2,
 
         [Display(Name = "Tạm Ứng")]
-        Advance = 3,
-
-        [Display(Name = "Hoàn Trả")]
-        Repayment = 4
+        Advance = 3
     }
 }

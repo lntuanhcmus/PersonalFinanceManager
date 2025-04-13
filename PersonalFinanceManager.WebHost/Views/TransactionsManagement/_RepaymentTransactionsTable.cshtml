@@ -1,0 +1,24 @@
+﻿@model PersonalFinanceManager.WebHost.Models.DetailTransactionViewModel
+
+<div class="mb-3">
+    <h4>Danh sách giao dịch hoàn trả</h4>
+    <button type="button" class="btn btn-success mb-2" data-bs-toggle="modal" data-bs-target="#addRepaymentModal">
+        Thêm giao dịch hoàn trả
+    </button>
+    <table class="table table-bordered" id="repaymentTransactionsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Thời gian giao dịch</th>
+                <th>Số tiền (VND)</th>
+                <th>Người gửi</th>
+                <th>Nội dung</th>
+                <th>Ngày tạo</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be populated dynamically -->
+        </tbody>
+    </table>
+</div>

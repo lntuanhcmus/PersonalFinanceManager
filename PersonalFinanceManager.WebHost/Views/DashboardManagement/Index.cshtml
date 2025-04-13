@@ -133,7 +133,7 @@
         }
 
             // Biểu đồ thu/chi theo tháng
-            fetch('http://localhost:8000/api/TransactionsApi/monthly-summary' + '@(Model.StartDate.HasValue ? "?startDate=" + Model.StartDate.Value.ToString("yyyy-MM-dd") : "")' + '@(Model.EndDate.HasValue ? "&endDate=" + Model.EndDate.Value.ToString("yyyy-MM-dd") : "")')
+            fetch('http://localhost:8000/api/StatisticsApi/monthly-summary' + '@(Model.StartDate.HasValue ? "?startDate=" + Model.StartDate.Value.ToString("yyyy-MM-dd") : "")' + '@(Model.EndDate.HasValue ? "&endDate=" + Model.EndDate.Value.ToString("yyyy-MM-dd") : "")')
                 .then(response => response.json())
                 .then(data => {
                     var labels = Object.keys(data);

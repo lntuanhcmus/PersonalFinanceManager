@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.API.Data;
+using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.API.Model;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Services;
@@ -33,6 +33,7 @@ builder.Services.AddScoped<GmailService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<BudgetService>();
+builder.Services.AddScoped<RepaymentTransactionService>();
 
 
 // Add DbContext
