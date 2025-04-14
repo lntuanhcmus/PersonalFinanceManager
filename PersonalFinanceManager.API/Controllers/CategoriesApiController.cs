@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PersonalFinanceManager.Shared.Data;
-using PersonalFinanceManager.Shared.Models;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 namespace PersonalFinanceManager.API.Controllers
 {

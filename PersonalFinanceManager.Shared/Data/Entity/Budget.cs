@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace PersonalFinanceManager.Shared.Models
+namespace PersonalFinanceManager.Shared.Data.Entity
 {
     public class Budget
     {
@@ -13,7 +13,7 @@ namespace PersonalFinanceManager.Shared.Models
         public int CategoryId { get; set; } // "Chi - Ăn uống", "Chi - Mua sắm", ...
 
         [JsonPropertyName("category")]
-        public Category Category { get; set; } 
+        public Category Category { get; set; }
 
         [JsonPropertyName("amount")]
         public decimal Amount { get; set; } // Số tiền tối đa cho ngân sách

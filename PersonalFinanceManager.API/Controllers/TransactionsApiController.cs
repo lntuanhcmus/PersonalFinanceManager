@@ -5,9 +5,9 @@ using PersonalFinanceManager.Shared.Models;
 using PersonalFinanceManager.Shared.Dto;
 using System.Globalization;
 using PersonalFinanceManager.Shared.Enum;
-using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.API.Model;
 using Microsoft.Extensions.Options;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 namespace PersonalFinanceManager.Controllers
 {

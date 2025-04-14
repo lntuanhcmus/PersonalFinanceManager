@@ -16,6 +16,7 @@ using PersonalFinanceManager.Scheduler.Models;
 using PersonalFinanceManager.Shared.Enum;
 using DocumentFormat.OpenXml.InkML;
 using PersonalFinanceManager.Shared.Constants;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 namespace PersonalFinanceManager.Scheduler.Jobs
 {
@@ -37,16 +38,16 @@ namespace PersonalFinanceManager.Scheduler.Jobs
             _logger = logger;
             // Lấy thư mục chứa file thực thi
             _basePath = AppContext.BaseDirectory;
-            _logger.LogDebug("Khởi tạo TransactionUpdateJobDB với base path: {BasePath}", _basePath);
+            _logger.LogDebug($"Khởi tạo {BackgroundJobConstant.TransactionUpdateJobDb} với base path: {_basePath}");
         }
 
-        public string JobName => "TransactionUpdateJobDB";
+        public string JobName => BackgroundJobConstant.TransactionUpdateJobDb;
         public string JobType => "DB";
         public string CronSchedule => _config.Jobs.FirstOrDefault(j => j.JobName == JobName)?.CronSchedule ?? "0/5 * * * * ?";
 
         protected override async Task ExecuteJob(IJobExecutionContext context)
         {
-            _logger.LogDebug("Bắt đầu thực thi TransactionUpdateJobDB tại {Time}", DateTime.Now);
+            _logger.LogDebug($"Bắt đầu thực thi {BackgroundJobConstant.TransactionUpdateJobDb} tại {DateTime.Now}");
 
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();

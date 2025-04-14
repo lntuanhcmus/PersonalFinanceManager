@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using PersonalFinanceManager.Shared.Data.Entity;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;

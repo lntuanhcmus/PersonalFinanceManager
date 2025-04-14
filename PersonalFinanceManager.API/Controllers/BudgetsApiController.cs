@@ -5,6 +5,7 @@ using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 [Route("api/[controller]")]
 [ApiController]

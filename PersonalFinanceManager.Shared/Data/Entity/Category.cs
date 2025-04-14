@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace PersonalFinanceManager.Shared.Models
+namespace PersonalFinanceManager.Shared.Data.Entity
 {
-    public class TransactionType
+    public class Category
     {
         [Key]
         [JsonPropertyName("id")]
@@ -19,5 +19,8 @@ namespace PersonalFinanceManager.Shared.Models
 
         [JsonPropertyName("code")]
         public string Code { get; set; }
+
+        [JsonPropertyName("TransactionTypeId")]
+        public int TransactionTypeId { get; set; }
     }
 }

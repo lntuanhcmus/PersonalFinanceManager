@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.Shared.Models;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 namespace PersonalFinanceManager.Shared.Data
 {

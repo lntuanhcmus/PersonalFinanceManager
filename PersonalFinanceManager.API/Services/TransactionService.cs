@@ -7,6 +7,7 @@ using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
 using System.Text;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 namespace PersonalFinanceManager.API.Services
 {

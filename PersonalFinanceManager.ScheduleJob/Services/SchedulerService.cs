@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using PersonalFinanceManager.Scheduler.Models;
 using Quartz.Spi;
 using System.Text.Json;
+using PersonalFinanceManager.Shared.Constants;
 
 namespace PersonalFinanceManager.Scheduler.Services
 {
@@ -41,7 +42,7 @@ namespace PersonalFinanceManager.Scheduler.Services
 
             var jobTypes = new Dictionary<string, Type>
             {
-                { "TransactionUpdateJobDB", typeof(TransactionUpdateJobDB) }
+                { BackgroundJobConstant.TransactionUpdateJobDb, typeof(TransactionUpdateJobDB) }
             };
 
             foreach (var jobConfig in _config.Jobs)

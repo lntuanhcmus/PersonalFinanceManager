@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PersonalFinanceManager.Shared.Models
+namespace PersonalFinanceManager.Shared.Data.Entity
 {
     public class RepaymentTransaction
     {

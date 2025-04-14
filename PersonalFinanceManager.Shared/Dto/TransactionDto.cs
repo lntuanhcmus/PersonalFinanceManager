@@ -1,4 +1,4 @@
-﻿using PersonalFinanceManager.Shared.Models;
+﻿using PersonalFinanceManager.Shared.Data.Entity;
 using System.Globalization;
 
 namespace PersonalFinanceManager.Shared.Dto

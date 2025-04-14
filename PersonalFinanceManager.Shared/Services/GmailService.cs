@@ -5,19 +5,9 @@ using Google.Apis.Auth.OAuth2.Flows;
 using System.Text.Json;
 using Google.Apis.Auth.OAuth2.Responses;
 using HtmlAgilityPack;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using PersonalFinanceManager.Shared.Models;
-using ClosedXML.Excel;
 using System.Globalization;
-using Google.Apis.Util.Store;
-using Google.Apis.Auth.OAuth2.Requests;
-using Newtonsoft.Json.Linq;
 using PersonalFinanceManager.Shared.Enum;
+using PersonalFinanceManager.Shared.Data.Entity;
 
 namespace PersonalFinanceManager.Shared.Services
 {
