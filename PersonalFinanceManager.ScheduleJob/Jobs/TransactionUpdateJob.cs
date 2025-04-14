@@ -1,195 +1,226 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PersonalFinanceManager.Shared.Data;
-using PersonalFinanceManager.Shared.Models;
-using PersonalFinanceManager.Shared.Services;
-using Quartz;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Microsoft.ML;
+using PersonalFinanceManager.Scheduler.Jobs;
 using PersonalFinanceManager.Scheduler.Models;
-using PersonalFinanceManager.Shared.Enum;
-using DocumentFormat.OpenXml.InkML;
 using PersonalFinanceManager.Shared.Constants;
 using PersonalFinanceManager.Shared.Data.Entity;
+using PersonalFinanceManager.Shared.Data;
+using PersonalFinanceManager.Shared.Enum;
+using PersonalFinanceManager.Shared.Helpers;
+using PersonalFinanceManager.Shared.ML.Models;
+using Quartz;
+using PersonalFinanceManager.Shared.Services;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
-namespace PersonalFinanceManager.Scheduler.Jobs
+public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
 {
-    public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
+    private readonly IServiceProvider _serviceProvider;
+    private readonly SchedulerConfig _config;
+    private readonly ILogger<TransactionUpdateJobDB> _logger;
+    private readonly string _basePath;
+    private readonly MLContext _mlContext;
+    private readonly ITransformer _categoryModel;
+    private readonly ITransformer _typeModel;
+    private readonly List<Category> _categories;
+    private readonly List<TransactionType> _transactionTypes;
+
+    public TransactionUpdateJobDB(
+        IServiceProvider serviceProvider,
+        ILogger<TransactionUpdateJobDB> logger,
+        IOptions<SchedulerConfig> config)
+        : base(logger)
     {
-        private readonly IServiceProvider _serviceProvider;
-        private readonly SchedulerConfig _config;
-        private readonly ILogger<TransactionUpdateJobDB> _logger;
-        private readonly string _basePath;
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _config = config.Value ?? throw new ArgumentNullException(nameof(config));
+        _logger = logger;
+        _basePath = AppContext.BaseDirectory;
+        _logger.LogInformation($"Khởi tạo {BackgroundJobConstant.TransactionUpdateJobDb} với base path: {_basePath}");
 
-        public TransactionUpdateJobDB(
-            IServiceProvider serviceProvider,
-            ILogger<TransactionUpdateJobDB> logger,
-            IOptions<SchedulerConfig> config)
-            : base(logger)
+        try
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _config = config.Value ?? throw new ArgumentNullException(nameof(config));
-            _logger = logger;
-            // Lấy thư mục chứa file thực thi
-            _basePath = AppContext.BaseDirectory;
-            _logger.LogDebug($"Khởi tạo {BackgroundJobConstant.TransactionUpdateJobDb} với base path: {_basePath}");
-        }
+            _mlContext = new MLContext();
+            var categoryModelPath = Path.Combine(_basePath, "Data/categoryModel.zip");
+            var typeModelPath = Path.Combine(_basePath, "Data/typeModel.zip");
 
-        public string JobName => BackgroundJobConstant.TransactionUpdateJobDb;
-        public string JobType => "DB";
-        public string CronSchedule => _config.Jobs.FirstOrDefault(j => j.JobName == JobName)?.CronSchedule ?? "0/5 * * * * ?";
-
-        protected override async Task ExecuteJob(IJobExecutionContext context)
-        {
-            _logger.LogDebug($"Bắt đầu thực thi {BackgroundJobConstant.TransactionUpdateJobDb} tại {DateTime.Now}");
-
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var gmailService = scope.ServiceProvider.GetRequiredService<GmailService>();
-
-            try
+            if (!File.Exists(categoryModelPath) || !File.Exists(typeModelPath))
             {
-                var jobConfig = _config.Jobs.FirstOrDefault(j => j.JobName == JobName);
-                _logger.LogDebug("Đọc cấu hình job: {Config}", JsonSerializer.Serialize(jobConfig));
-
-                var parameters = string.IsNullOrEmpty(jobConfig?.ParametersJson)
-                    ? new GmailJobParameters()
-                    : JsonSerializer.Deserialize<GmailJobParameters>(jobConfig.ParametersJson);
-                _logger.LogDebug("Tham số job: {Parameters}", JsonSerializer.Serialize(parameters));
-
-                _logger.LogDebug("Kiểm tra kết nối database...");
-                var canConnect = await dbContext.Database.CanConnectAsync();
-                _logger.LogDebug("Kết nối database: {Status}", canConnect ? "Thành công" : "Thất bại");
-                if (!canConnect)
-                {
-                    _logger.LogError("Không thể kết nối database với connection string: {ConnectionString}", dbContext.Database.GetConnectionString());
-                    throw new InvalidOperationException("Không thể kết nối database.");
-                }
-
-                // Sử dụng đường dẫn tuyệt đối
-                var credentialsPath = Path.Combine(_basePath, parameters.CredentialsPath ?? "Data/credentials.json");
-                var tokenPath = Path.Combine(_basePath, parameters.TokenPath ?? "Data/token.json");
-
-                _logger.LogDebug("Kiểm tra file credentials: {Path}", credentialsPath);
-                if (!File.Exists(credentialsPath))
-                {
-                    _logger.LogError("File credentials không tồn tại: {Path}", credentialsPath);
-                    throw new FileNotFoundException("Không tìm thấy credentials.json", credentialsPath);
-                }
-                _logger.LogDebug("Kiểm tra file token: {Path}", tokenPath);
-                if (!File.Exists(tokenPath))
-                {
-                    _logger.LogWarning("File token không tồn tại, GmailService sẽ tạo mới nếu cần: {Path}", tokenPath);
-                }
-
-                _logger.LogDebug("Gọi GmailService...");
-                var transactions = await gmailService.ExtractTransactionsAsync(
-                    credentialsPath,
-                    tokenPath,
-                    parameters.MaxResults > 0 ? parameters.MaxResults : 10);
-
-                _logger.LogInformation($"Đã lấy được {transactions.Count} giao dịch.");
-
-                await SaveTransactions(dbContext, transactions);
-
-                _logger.LogDebug("Hoàn tất TransactionUpdateJobDB tại {Time}", DateTime.Now);
+                _logger.LogWarning("Không tìm thấy mô hình tại {CategoryPath} hoặc {TypePath}", categoryModelPath, typeModelPath);
+                throw new FileNotFoundException("Không tìm thấy file mô hình ML.");
             }
-            catch (Exception ex)
+
+            _logger.LogInformation("Tải mô hình category...");
+            _categoryModel = _mlContext.Model.Load(categoryModelPath, out var categorySchema);
+            _logger.LogInformation("Tải mô hình type...");
+            _typeModel = _mlContext.Model.Load(typeModelPath, out var typeSchema);
+
+            // Cache categories và transactionTypes
+            using (var scope = _serviceProvider.CreateScope())
             {
-                _logger.LogError(ex, "Lỗi khi thực thi TransactionUpdateJobDB: {Message}", ex.Message);
-                throw;
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                _categories = dbContext.Categories.ToList();
+                _transactionTypes = dbContext.TransactionTypes.ToList();
             }
         }
-
-        private async Task SaveTransactions(AppDbContext dbContext, List<Transaction> transactions)
+        catch (Exception ex)
         {
-            _logger.LogDebug("Bắt đầu lưu {Count} giao dịch vào database...", transactions.Count);
+            _logger.LogError(ex, "Lỗi khi khởi tạo mô hình ML: {Message}", ex.Message);
+            throw;
+        }
+    }
 
-            var existingIds = await dbContext.Transactions
-                .Select(t => t.TransactionId)
-                .ToListAsync();
-            var newTransactions = transactions
-                .Where(t => !existingIds.Contains(t.TransactionId))
-                .ToList();
+    public string JobName => BackgroundJobConstant.TransactionUpdateJobDb;
+    public string JobType => "DB";
+    public string CronSchedule => _config.Jobs.FirstOrDefault(j => j.JobName == JobName)?.CronSchedule ?? "0/5 * * * * ?";
 
-            if (newTransactions.Any())
+    protected override async Task ExecuteJob(IJobExecutionContext context)
+    {
+        _logger.LogInformation($"Bắt đầu thực thi {BackgroundJobConstant.TransactionUpdateJobDb} tại {DateTime.Now}");
+
+        using var scope = _serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var gmailService = scope.ServiceProvider.GetRequiredService<GmailService>();
+
+        try
+        {
+            var jobConfig = _config.Jobs.FirstOrDefault(j => j.JobName == JobName);
+            _logger.LogInformation("Đọc cấu hình job: {Config}", JsonSerializer.Serialize(jobConfig));
+
+            var parameters = string.IsNullOrEmpty(jobConfig?.ParametersJson)
+                ? new GmailJobParameters()
+                : JsonSerializer.Deserialize<GmailJobParameters>(jobConfig.ParametersJson);
+            _logger.LogInformation("Tham số job: {Parameters}", JsonSerializer.Serialize(parameters));
+
+            if (!parameters.IsEnabled)
             {
-                _logger.LogDebug("Phân loại {Count} giao dịch mới...", newTransactions.Count);
-                newTransactions = await ClassifyTransactionsAsync(dbContext, newTransactions);
-                dbContext.Transactions.AddRange(newTransactions);
-                await dbContext.SaveChangesAsync();
-                _logger.LogInformation("Đã lưu {Count} giao dịch mới.", newTransactions.Count);
+                _logger.LogInformation("TransactionUpdateJobDB is disabled. Skipping.");
+                return;
             }
-            else
+
+            var canConnect = await dbContext.Database.CanConnectAsync();
+            if (!canConnect)
             {
-                _logger.LogInformation("Không có giao dịch mới để lưu.");
+                _logger.LogError("Không thể kết nối database.");
+                throw new InvalidOperationException("Không thể kết nối database.");
             }
+
+            var credentialsPath = Path.Combine(_basePath, parameters.CredentialsPath ?? "Data/credentials.json");
+            var tokenPath = Path.Combine(_basePath, parameters.TokenPath ?? "Data/token.json");
+
+            if (!File.Exists(credentialsPath))
+            {
+                _logger.LogError("File credentials không tồn tại: {Path}", credentialsPath);
+                throw new FileNotFoundException("Không tìm thấy credentials.json", credentialsPath);
+            }
+
+            var transactions = await gmailService.ExtractTransactionsAsync(
+                credentialsPath,
+                tokenPath,
+                parameters.MaxResults > 0 ? parameters.MaxResults : 10);
+
+            _logger.LogInformation($"Đã lấy được {transactions.Count()} giao dịch.");
+
+            await SaveTransactions(dbContext, transactions);
+
+            _logger.LogInformation("Hoàn tất TransactionUpdateJobDB tại {Time}", DateTime.Now);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi thực thi TransactionUpdateJobDB: {Message}", ex.Message);
+            throw;
+        }
+    }
+
+    private async Task SaveTransactions(AppDbContext dbContext, List<Transaction> transactions)
+    {
+        _logger.LogInformation("Bắt đầu lưu {Count} giao dịch...", transactions.Count);
+
+        var existingIds = await dbContext.Transactions
+            .Select(t => t.TransactionId)
+            .ToListAsync();
+        var newTransactions = transactions
+            .Where(t => !existingIds.Contains(t.TransactionId))
+            .ToList();
+
+        if (newTransactions.Any())
+        {
+            _logger.LogInformation("Phân loại {Count} giao dịch mới...", newTransactions.Count);
+            newTransactions = await ClassifyTransactionsAsync(dbContext, newTransactions);
+            dbContext.Transactions.AddRange(newTransactions);
+            await dbContext.SaveChangesAsync();
+            _logger.LogInformation("Đã lưu {Count} giao dịch mới.", newTransactions.Count);
+        }
+        else
+        {
+            _logger.LogInformation("Không có giao dịch mới để lưu.");
+        }
+    }
+
+    private async Task<List<Transaction>> ClassifyTransactionsAsync(AppDbContext dbContext, List<Transaction> transactions)
+    {
+        _logger.LogInformation("Bắt đầu phân loại {Count} giao dịch...", transactions.Count);
+
+        var defaultCategory = _categories.FirstOrDefault(c => c.Code == CategoryCodes.SINH_HOAT);
+        var defaultTransactionType = _transactionTypes.FirstOrDefault(t => t.Code == TransactionTypeConstant.Expense);
+
+        if (defaultCategory == null || defaultTransactionType == null)
+        {
+            _logger.LogError("Không tìm thấy danh mục hoặc loại giao dịch mặc định.");
+            throw new InvalidOperationException("Không tìm thấy danh mục hoặc loại giao dịch mặc định.");
         }
 
-        private async Task<List<Transaction>> ClassifyTransactionsAsync(AppDbContext dbContext, List<Transaction> transactions)
+        // Chuyển thành batch TransactionData
+        var mlInputs = transactions.Select(tx => new TransactionData
         {
-            _logger.LogDebug("Bắt đầu phân loại giao dịch...");
+            Description = string.IsNullOrWhiteSpace(tx.Description) ? "Unknown" : MLDataHelper.CleanText(tx.Description),
+            Amount = (float)tx.Amount,
+            TransactionTime = tx.TransactionTime.ToString("yyyy-MM-dd"),
+            DayOfWeek = tx.TransactionTime.DayOfWeek.ToString(),
+            HourOfDay = tx.TransactionTime.Hour,
+            CategoryId = "",
+            TransactionTypeId = ""
+        }).ToList();
 
-            var labelingRules = await dbContext.LabelingRules.ToListAsync();
-            var categories = await dbContext.Categories.ToListAsync();
-            var transactionTypes = await dbContext.TransactionTypes.ToListAsync();
+        var dataView = _mlContext.Data.LoadFromEnumerable(mlInputs);
 
-            var defaultCategory = categories.FirstOrDefault(c => c.Code == CategoryCodes.SINH_HOAT); 
-            var defaultTransactionType = dbContext.TransactionTypes.FirstOrDefault(t => t.Code == TransactionTypeConstant.Expense);
+        // Dự đoán batch
+        var categoryPredictions = _categoryModel.Transform(dataView);
+        var typePredictions = _typeModel.Transform(dataView);
 
-            if (defaultCategory == null)
-            {
-                _logger.LogError("Không tìm thấy danh mục mặc định GT-PS.");
-                throw new InvalidOperationException("Danh mục mặc định GT-PS không tồn tại.");
-            }
-            if (defaultTransactionType == null)
-            {
-                _logger.LogError("Không tìm thấy loại giao dịch mặc định EXPENSE.");
-                throw new InvalidOperationException("Loại giao dịch mặc định EXPENSE không tồn tại.");
-            }
+        // Lấy kết quả dự đoán
+        var categoryResults = _mlContext.Data.CreateEnumerable<TransactionPrediction>(
+            categoryPredictions, reuseRowObject: false).ToList();
+        var typeResults = _mlContext.Data.CreateEnumerable<TransactionPrediction>(
+            typePredictions, reuseRowObject: false).ToList();
 
-            foreach (var tx in transactions)
-            {
-                if (string.IsNullOrWhiteSpace(tx.Description))
-                {
-                    _logger.LogDebug("Bỏ qua giao dịch không có mô tả: {TransactionId}", tx.TransactionId);
-                    tx.CategoryId = defaultCategory.Id;
-                    tx.TransactionTypeId = defaultTransactionType.Id;
-                    tx.Status = (int)TransactionStatusEnum.Success;
-                    continue;
-                }
+        // Gán nhãn cho giao dịch
+        for (int i = 0; i < transactions.Count; i++)
+        {
+            var tx = transactions[i];
+            var categoryPrediction = categoryResults[i];
+            var typePrediction = typeResults[i];
 
-                var matchedRule = labelingRules.FirstOrDefault(rule =>
-                    tx.Description.Contains(rule.Keyword, StringComparison.OrdinalIgnoreCase));
+            // Gán CategoryId
+            bool isValidCategory = int.TryParse(categoryPrediction.CategoryId, out int predictedCategoryId) &&
+                                  _categories.Any(c => c.Id == predictedCategoryId);
+            tx.CategoryId = isValidCategory ? predictedCategoryId : defaultCategory.Id;
+            _logger.LogInformation("Giao dịch {Id}: CategoryId={Category}", tx.TransactionId, tx.CategoryId);
 
-                if (matchedRule != null)
-                {
-                    tx.CategoryId = matchedRule.CategoryId;
-                    tx.TransactionTypeId = matchedRule.TransactionTypeId;
-                    _logger.LogDebug("Giao dịch {TransactionId} khớp rule {Keyword}: CategoryId={CategoryId}, TransactionTypeId={TransactionTypeId}",
-                        tx.TransactionId, matchedRule.Keyword, tx.CategoryId, tx.TransactionTypeId);
-                }
-                else
-                {
-                    tx.CategoryId = defaultCategory.Id;
-                    tx.TransactionTypeId = defaultTransactionType.Id;
-                    _logger.LogDebug("Giao dịch {TransactionId} dùng mặc định: CategoryId={CategoryId}, TransactionTypeId={TransactionTypeId}",
-                        tx.TransactionId, tx.CategoryId, tx.TransactionTypeId);
-                }
+            // Gán TransactionTypeId
+            bool isValidType = int.TryParse(typePrediction.TransactionTypeId, out int predictedTypeId) &&
+                               _transactionTypes.Any(t => t.Id == predictedTypeId);
+            tx.TransactionTypeId = isValidType ? predictedTypeId : defaultTransactionType.Id;
+            _logger.LogInformation("Giao dịch {Id}: TransactionTypeId={Type}", tx.TransactionId, tx.TransactionTypeId);
 
-                tx.Status = tx.TransactionTypeId == (int)TransactionTypeEnum.Advance
-                    ? (int)TransactionStatusEnum.Pending
-                    : (int)TransactionStatusEnum.Success;
-            }
-
-            _logger.LogDebug("Hoàn tất phân loại {Count} giao dịch.", transactions.Count);
-            return transactions;
+            // Gán Status
+            tx.Status = tx.TransactionTypeId == (int)TransactionTypeEnum.Advance
+                ? (int)TransactionStatusEnum.Pending
+                : (int)TransactionStatusEnum.Success;
         }
+
+        _logger.LogInformation("Hoàn tất phân loại {Count} giao dịch.", transactions.Count);
+        return transactions;
     }
 }

@@ -15,18 +15,18 @@ namespace PersonalFinanceManager.Scheduler.Host
         {
             _logger = logger;
             _schedulerService = schedulerService;
-            _logger.LogDebug("Worker khởi tạo.");
+            _logger.LogInformation("Worker khởi tạo.");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogDebug("Worker bắt đầu chạy tại: {Time}", DateTimeOffset.Now);
+            _logger.LogInformation("Worker bắt đầu chạy tại: {Time}", DateTimeOffset.Now);
             await _schedulerService.StartAsync();
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Worker dừng tại: {Time}", DateTimeOffset.Now);
+            _logger.LogInformation("Worker dừng tại: {Time}", DateTimeOffset.Now);
             await _schedulerService.StopAsync();
             await base.StopAsync(cancellationToken);
         }

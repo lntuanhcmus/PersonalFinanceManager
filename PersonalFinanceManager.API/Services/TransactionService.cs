@@ -232,6 +232,12 @@ namespace PersonalFinanceManager.API.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddTransactionCorrection(TransactionCorrection transaction)
+        {
+            _context.TransactionCorrections.Add(transaction);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task UpdateTransaction(Transaction transaction)
         {
             _context.Transactions.Update(transaction);

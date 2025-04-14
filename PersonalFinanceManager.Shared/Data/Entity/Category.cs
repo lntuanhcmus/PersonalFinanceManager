@@ -11,16 +11,12 @@ namespace PersonalFinanceManager.Shared.Data.Entity
     public class Category
     {
         [Key]
-        [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonPropertyName("code")]
         public string Code { get; set; }
 
-        [JsonPropertyName("TransactionTypeId")]
         public int TransactionTypeId { get; set; }
     }
 }

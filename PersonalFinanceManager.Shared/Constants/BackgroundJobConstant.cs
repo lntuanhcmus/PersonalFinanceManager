@@ -9,5 +9,7 @@ namespace PersonalFinanceManager.Shared.Constants
     public static class BackgroundJobConstant
     {
         public const string TransactionUpdateJobDb = "TransactionUpdateJobDB";
+
+        public const string MLTrainingJob = "MLTrainingJob";
     }
 }

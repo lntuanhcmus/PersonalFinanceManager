@@ -19,6 +19,8 @@ namespace PersonalFinanceManager.Shared.Data
 
         public DbSet<RepaymentTransaction> RepaymentTransactions { get; set; }
 
+        public DbSet<TransactionCorrection> TransactionCorrections { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -28,6 +30,16 @@ namespace PersonalFinanceManager.Shared.Data
             .WithMany(t => t.RepaymentTransactions)
             .HasForeignKey(rt => rt.TransactionId)
             .HasPrincipalKey(t => t.TransactionId); // Rất quan trọng nếu TransactionId không phải là 'Id'
+
+            modelBuilder.Entity<TransactionCorrection>()
+            .HasKey(t => t.Id);
+            modelBuilder.Entity<TransactionCorrection>()
+                .Property(t => t.TransactionId)
+                .IsRequired();
+            modelBuilder.Entity<TransactionCorrection>()
+                .Property(t => t.Description)
+                .IsRequired();
+            // Thêm ràng buộc khác nếu cần
 
             modelBuilder.Entity<TransactionType>().HasData(
                 new TransactionType { Id = 1, Name = "Thu Nhập", Code = "Income" },

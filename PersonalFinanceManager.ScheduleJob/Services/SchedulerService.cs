@@ -32,17 +32,19 @@ namespace PersonalFinanceManager.Scheduler.Services
             var schedulerFactory = new StdSchedulerFactory();
             _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
             _scheduler.JobFactory = new QuartzJobFactory(serviceProvider);
-            _logger.LogDebug("Khởi tạo Quartz Scheduler với JobFactory.");
+            _logger.LogInformation("Khởi tạo Quartz Scheduler với JobFactory.");
         }
 
         public async Task StartAsync()
         {
-            _logger.LogDebug("Khởi động SchedulerService...");
-            _logger.LogDebug("Cấu hình jobs: {Config}", JsonSerializer.Serialize(_config.Jobs));
+            _logger.LogInformation("Khởi động SchedulerService...");
+            _logger.LogInformation("Cấu hình jobs: {Config}", JsonSerializer.Serialize(_config.Jobs));
 
             var jobTypes = new Dictionary<string, Type>
             {
+                { BackgroundJobConstant.MLTrainingJob, typeof(MLTrainingJob) },
                 { BackgroundJobConstant.TransactionUpdateJobDb, typeof(TransactionUpdateJobDB) }
+
             };
 
             foreach (var jobConfig in _config.Jobs)
@@ -53,7 +55,7 @@ namespace PersonalFinanceManager.Scheduler.Services
                     continue;
                 }
 
-                _logger.LogDebug("Tạo job {JobName} với cron {Cron}", jobConfig.JobName, jobConfig.CronSchedule);
+                _logger.LogInformation("Tạo job {JobName} với cron {Cron}", jobConfig.JobName, jobConfig.CronSchedule);
                 IJobDetail job = JobBuilder.Create(jobTypes[jobConfig.JobName])
                     .WithIdentity(jobConfig.JobName, "group1")
                     .Build();
@@ -69,10 +71,10 @@ namespace PersonalFinanceManager.Scheduler.Services
             }
 
             await _scheduler.Start();
-            _logger.LogDebug("SchedulerService đã khởi động.");
+            _logger.LogInformation("SchedulerService đã khởi động.");
 
             // Trigger thủ công để test
-            _logger.LogDebug("Trigger thủ công tất cả jobs...");
+            _logger.LogInformation("Trigger thủ công tất cả jobs...");
             foreach (var jobConfig in _config.Jobs)
             {
                 await TriggerJobAsync(jobConfig.JobName);
@@ -81,19 +83,19 @@ namespace PersonalFinanceManager.Scheduler.Services
 
         public async Task StopAsync()
         {
-            _logger.LogDebug("Dừng SchedulerService...");
+            _logger.LogInformation("Dừng SchedulerService...");
             await _scheduler.Shutdown();
-            _logger.LogDebug("SchedulerService đã dừng.");
+            _logger.LogInformation("SchedulerService đã dừng.");
         }
 
         public async Task TriggerJobAsync(string jobName)
         {
-            _logger.LogDebug("Trigger thủ công job {JobName}", jobName);
+            _logger.LogInformation("Trigger thủ công job {JobName}", jobName);
             var jobKey = new JobKey(jobName, "group1");
             if (await _scheduler.CheckExists(jobKey))
             {
                 await _scheduler.TriggerJob(jobKey);
-                _logger.LogDebug("Đã trigger job {JobName}", jobName);
+                _logger.LogInformation("Đã trigger job {JobName}", jobName);
             }
             else
             {
@@ -115,7 +117,7 @@ namespace PersonalFinanceManager.Scheduler.Services
         {
             var jobType = bundle.JobDetail.JobType;
             var logger = _serviceProvider.GetService<ILogger<SchedulerService>>();
-            logger?.LogDebug("Tạo job: {JobType}", jobType.Name);
+            logger?.LogInformation("Tạo job: {JobType}", jobType.Name);
 
             try
             {

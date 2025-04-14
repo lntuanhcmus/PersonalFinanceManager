@@ -119,6 +119,11 @@ namespace PersonalFinanceManager.Controllers
             transaction.TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
 
             await _transactionService.UpdateTransaction(transaction);
+
+            var transactionCorrection = _mapper.Map<TransactionCorrection>(transaction);
+
+            transactionCorrection.CreatedAt = DateTime.Now;
+            await _transactionService.AddTransactionCorrection(transactionCorrection);
             return Ok();
         }
 

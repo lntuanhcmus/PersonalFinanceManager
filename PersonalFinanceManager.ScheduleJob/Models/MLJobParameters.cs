@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace PersonalFinanceManager.Scheduler.Models
 {
-    public class GmailJobParameters : IJobParameters
+    public class MLJobParameters
     {
-        public string CredentialsPath { get; set; }
-        public string TokenPath { get; set; }
-        public int MaxResults { get; set; }
+        public string CategoryModelPath { get; set; }
+        public string TypeModelPath { get; set; }
+
         public bool IsEnabled { get; set; } = true;
     }
 }

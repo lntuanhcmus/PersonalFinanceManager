@@ -31,6 +31,7 @@ namespace PersonalFinanceManager.Shared.MappingProfiles
                         DateTime.ParseExact(src.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)))
                 .ForMember(dest => dest.TransactionType, opt => opt.Ignore())
                 .ForMember(dest => dest.Category, opt => opt.Ignore());
+            CreateMap<Transaction, TransactionCorrection>();
         }
     
     }

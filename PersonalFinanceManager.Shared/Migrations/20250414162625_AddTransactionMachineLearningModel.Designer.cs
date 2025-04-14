@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersonalFinanceManager.Shared.Data;
 
@@ -11,9 +12,11 @@ using PersonalFinanceManager.Shared.Data;
 namespace PersonalFinanceManager.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250414162625_AddTransactionMachineLearningModel")]
+    partial class AddTransactionMachineLearningModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,7 +53,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Budgets", (string)null);
+                    b.ToTable("Budgets");
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.Entity.Category", b =>
@@ -74,7 +77,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
 
                     b.HasData(
                         new
@@ -134,7 +137,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LabelingRules", (string)null);
+                    b.ToTable("LabelingRules");
 
                     b.HasData(
                         new
@@ -249,7 +252,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("RepaymentTransactions", (string)null);
+                    b.ToTable("RepaymentTransactions");
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.Entity.Transaction", b =>
@@ -304,7 +307,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("TransactionTypeId");
 
-                    b.ToTable("Transactions", (string)null);
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.Entity.TransactionCorrection", b =>
@@ -340,7 +343,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransactionCorrections", (string)null);
+                    b.ToTable("TransactionCorrections");
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.Entity.TransactionType", b =>
@@ -361,7 +364,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransactionTypes", (string)null);
+                    b.ToTable("TransactionTypes");
 
                     b.HasData(
                         new
