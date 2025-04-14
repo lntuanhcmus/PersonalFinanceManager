@@ -8,6 +8,7 @@ using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
 using System.Text;
 using PersonalFinanceManager.Shared.Data.Entity;
+using AutoMapper;
 
 namespace PersonalFinanceManager.API.Services
 {
@@ -15,9 +16,12 @@ namespace PersonalFinanceManager.API.Services
     {
         private readonly AppDbContext _context;
 
-        public TransactionService(AppDbContext context) 
+        private readonly IMapper _mapper;
+
+        public TransactionService(AppDbContext context, IMapper mapper) 
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public List<Transaction> GetTransactions()
@@ -58,25 +62,9 @@ namespace PersonalFinanceManager.API.Services
             }
 
             // Phân trang và chuyển sang DTO
-            var pagedItems = await query
-                .Select(x => new TransactionDto
-                {
-                    Amount = x.Amount,
-                    CategoryId = x.CategoryId,
-                    SourceAccount = x.SourceAccount,
-                    Description = x.Description,
-                    RecipientAccount = x.RecipientAccount,
-                    RecipientBank = x.RecipientBank,
-                    RecipientName = x.RecipientName,
-                    TransactionId = x.TransactionId,
-                    TransactionTime = x.TransactionTime.ToString("dd/MM/yyyy HH:mm"),
-                    TransactionTypeId = x.TransactionTypeId,
-                    CategoryName = x.Category != null ? x.Category.Name : null,
-                    TransactionTypeName = x.TransactionType != null ? x.TransactionType.Name : null,
-                    Status = x.Status,
-                    RepaymentAmount = x.RepaymentAmount,
-                })
-                .ToListAsync();
+            var transactions = await query.ToListAsync();
+
+            var pagedItems = _mapper.Map<List<TransactionDto>>(transactions);
 
             // Trả kết quả dạng phân trang
             return new PagedResponse<TransactionDto>

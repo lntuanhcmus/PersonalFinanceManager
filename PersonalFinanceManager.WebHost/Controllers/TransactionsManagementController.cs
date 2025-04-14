@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.InkML;
-using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PersonalFinanceManager.Shared.Data.Entity;
@@ -9,11 +8,8 @@ using PersonalFinanceManager.Shared.Models;
 using PersonalFinanceManager.WebHost.Helper;
 using PersonalFinanceManager.WebHost.Models;
 using System.Globalization;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Web;
 using X.PagedList;
 
 namespace PersonalFinanceManager.WebHost.Controllers
@@ -21,9 +17,11 @@ namespace PersonalFinanceManager.WebHost.Controllers
     public class TransactionsManagementController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        public TransactionsManagementController(IHttpClientFactory httpClientFactory)
+        private readonly IMapper _mapper;
+        public TransactionsManagementController(IHttpClientFactory httpClientFactory, IMapper mapper)
         {
             _httpClientFactory = httpClientFactory;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -189,28 +187,17 @@ namespace PersonalFinanceManager.WebHost.Controllers
                     } 
 
                 }
-                var transaction = new TransactionDto()
-                {
-                    CategoryId = model.CategoryId,
-                    TransactionTypeName = model.TransactionTypeName,
-                    CategoryName = model.CategoryName,
-                    Amount = model.Amount,
-                    Description = model.Description,
-                    RecipientAccount = model.RecipientAccount,
-                    RecipientBank = model.RecipientBank,
-                    RecipientName  = model.RecipientName,
-                    SourceAccount = model.SourceAccount,
-                    TransactionId = model.TransactionId,
-                    TransactionTime = model.TransactionTime,
-                    TransactionTypeId = model.TransactionTypeId
-                };
+
+
+                var transaction = _mapper.Map<TransactionDto>(model);
+
                 var json = JsonSerializer.Serialize(transaction);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("api/transactionsApi", content);
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["Success"] = "Giao dịch đã được thêm thành công";
-                    return RedirectToAction("Index", new {SuccessMessage = "Thêm giao dịch thành công"});
+                    return RedirectToAction("Index");
                 }
                 ModelState.AddModelError("", "Không thể thêm giao dịch. Vui lòng thử lại.");
             }
@@ -228,29 +215,15 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 var json = await response.Content.ReadAsStringAsync();
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var transaction = JsonSerializer.Deserialize<TransactionDto>(json, options);
-                var model = new DetailTransactionViewModel()
-                {
-                    CategoryId = transaction.CategoryId,
-                    Amount = transaction.Amount,
-                    Categories = await PopulateCategories(),
-                    TransactionTypes = await PopulateTransctionTypes(),
-                    Statuses = await PopulateStatuses(),
-                    Description = transaction.Description,
-                    RecipientAccount = transaction.RecipientAccount,
-                    RecipientBank = transaction.RecipientBank,
-                    RecipientName = transaction.RecipientName,
-                    SourceAccount = transaction.SourceAccount,
-                    TransactionId = transaction.TransactionId,
-                    TransactionTime = transaction.TransactionTime,
-                    TransactionTypeId = transaction.TransactionTypeId,
-                    TransactionTypeName = transaction.TransactionTypeName,
-                    CategoryName = transaction.CategoryName,
-                    Status = transaction.Status,
-                };
                 if (transaction != null)
                 {
+                    var model = _mapper.Map<DetailTransactionViewModel>(transaction);
+                    model.Categories = await PopulateCategories();
+                    model.TransactionTypes = await PopulateTransctionTypes();
+                    model.Statuses = await PopulateStatuses();
                     return View(model);
                 }
+
             }
             TempData["Error"] = "Không tìm thấy giao dịch";
             return RedirectToAction("Index");
@@ -266,24 +239,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             {
                 return View(model);
             }
-
-            // Ánh xạ sang TransactionDto để gửi API
-            var transactionDto = new TransactionDto
-            {
-                TransactionId = model.TransactionId,
-                TransactionTime = model.TransactionTime,
-                SourceAccount = model.SourceAccount,
-                RecipientAccount = model.RecipientAccount,
-                RecipientName = model.RecipientName,
-                RecipientBank = model.RecipientBank,
-                Amount = model.Amount,
-                Description = model.Description,
-                TransactionTypeId = model.TransactionTypeId,
-                CategoryId = model.CategoryId,
-                CategoryName = model.CategoryName,
-                TransactionTypeName = model.TransactionTypeName,
-                Status = model.Status
-            };
+            var transactionDto = _mapper.Map<TransactionDto>(model);
 
             var client = _httpClientFactory.CreateClient("ApiClient");
             var json = JsonSerializer.Serialize(transactionDto);

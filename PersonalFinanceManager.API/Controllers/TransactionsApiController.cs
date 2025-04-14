@@ -8,6 +8,7 @@ using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.API.Model;
 using Microsoft.Extensions.Options;
 using PersonalFinanceManager.Shared.Data.Entity;
+using AutoMapper;
 
 namespace PersonalFinanceManager.Controllers
 {
@@ -19,17 +20,20 @@ namespace PersonalFinanceManager.Controllers
         private readonly TransactionService _transactionService;
         private readonly CategoryService _categoryService;
         private readonly GmailServiceSettings _gmailSettings;
+        private readonly IMapper _mapper;
 
 
         public TransactionsApiController(GmailService gmailService,
                                          TransactionService transactionService,
                                          CategoryService categoryService,
-                                         IOptions<GmailServiceSettings> gmailOptions)
+                                         IOptions<GmailServiceSettings> gmailOptions,
+                                         IMapper mapper)
         {
             _gmailService = gmailService;
             _transactionService = transactionService;
             _categoryService = categoryService;
             _gmailSettings = gmailOptions.Value;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -63,7 +67,7 @@ namespace PersonalFinanceManager.Controllers
             {
                 return NotFound();
             }
-            var result = new TransactionDto(transaction);
+            var result = _mapper.Map<TransactionDto>(transaction);
             return Ok(result);
         }
 
@@ -89,20 +93,8 @@ namespace PersonalFinanceManager.Controllers
                 if (transactionDto == null || string.IsNullOrEmpty(transactionDto.TransactionId))
                     return BadRequest("Dữ liệu không hợp lệ");
 
-                var transaction = new Transaction
-                {
-                    TransactionId = transactionDto.TransactionId,
-                    TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture),
-                    SourceAccount = transactionDto.SourceAccount,
-                    RecipientAccount = transactionDto.RecipientAccount,
-                    RecipientName = transactionDto.RecipientName,
-                    RecipientBank = transactionDto.RecipientBank,
-                    Amount = transactionDto.Amount,
-                    Description = transactionDto.Description,
-                    CategoryId = transactionDto.CategoryId,
-                    TransactionTypeId = transactionDto.TransactionTypeId,
-                    Status = transactionDto.TransactionTypeId == (int)TransactionTypeEnum.Advance ? (int)TransactionStatusEnum.Pending : (int)TransactionStatusEnum.Success,
-                };
+                var transaction = _mapper.Map<Transaction>(transactionDto);
+                transaction.Status = transactionDto.TransactionTypeId == (int)TransactionTypeEnum.Advance ? (int)TransactionStatusEnum.Pending : (int)TransactionStatusEnum.Success;
 
                 await _transactionService.AddTransaction(transaction);
                 return Ok();
@@ -123,17 +115,8 @@ namespace PersonalFinanceManager.Controllers
             var transaction = _transactionService.GetById(id);
             if (transaction == null) return NotFound();
 
-            // Cập nhật thông tin cơ bản
+            _mapper.Map(transactionDto, transaction);
             transaction.TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
-            transaction.SourceAccount = transactionDto.SourceAccount;
-            transaction.RecipientAccount = transactionDto.RecipientAccount;
-            transaction.RecipientName = transactionDto.RecipientName;
-            transaction.RecipientBank = transactionDto.RecipientBank;
-            transaction.Amount = transactionDto.Amount;
-            transaction.Description = transactionDto.Description;
-            transaction.CategoryId = transactionDto.CategoryId;
-            transaction.TransactionTypeId = transactionDto.TransactionTypeId;
-            transaction.Status = transactionDto.Status;
 
             await _transactionService.UpdateTransaction(transaction);
             return Ok();
@@ -180,27 +163,6 @@ namespace PersonalFinanceManager.Controllers
             var fileName = $"transactions_{DateTime.Now:yyyyMMddHHmmss}.csv";
             return File(fileBytes, "text/csv", fileName);
         }
-
-        //private async Task<Transaction> ClassifyTransactionTypeByCategory(int? categoryId, Transaction transaction)
-        //{
-        //    if (categoryId.HasValue)
-        //    {
-        //        var category = await _categoryService.GetByIdAsync(categoryId.Value);
-        //        if (category == null)
-        //            return null;
-
-        //        transaction.TransactionTypeId = category.TransactionTypeId;
-        //    }
-
-        //    return transaction;
-        //}
-
-
-
-        //Statistic Api
-
-
-
 
     }
 }

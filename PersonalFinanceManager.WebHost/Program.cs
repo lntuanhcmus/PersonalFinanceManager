@@ -30,6 +30,9 @@ builder.Services.AddHttpClient("ApiClient", client =>
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+
 var app = builder.Build();
 // Sử dụng localization
 app.UseRequestLocalization();

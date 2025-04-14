@@ -6,6 +6,7 @@ using PersonalFinanceManager.Shared.Services;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PersonalFinanceManager.Shared.MappingProfiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,8 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<BudgetService>();
 builder.Services.AddScoped<RepaymentTransactionService>();
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -57,13 +60,6 @@ app.MapControllers();
 // Cấu hình chạy trên port 8000 HTTP
 app.Urls.Add("http://localhost:8000");
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var excelService = scope.ServiceProvider.GetRequiredService<ExcelService>();
-//    var transactionService = scope.ServiceProvider.GetRequiredService<TransactionService>();
-//    var migrator = new ExcelToSqlMigrator(excelService, transactionService);
-//    await migrator.Migrate();
-//}
 
 app.Run();
 
