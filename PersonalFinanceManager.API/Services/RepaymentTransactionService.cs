@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PersonalFinanceManager.Infrastructure.Data;
 using PersonalFinanceManager.Shared.Data;
-using PersonalFinanceManager.Shared.Data.Entity;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Enum;
 

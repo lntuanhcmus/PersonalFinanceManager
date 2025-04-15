@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.Shared.Data;
+using PersonalFinanceManager.Infrastructure.Data;
 using PersonalFinanceManager.API.Helper;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Enum;

@@ -7,8 +7,6 @@ using Google.Apis.Auth.OAuth2.Responses;
 using HtmlAgilityPack;
 using System.Globalization;
 using PersonalFinanceManager.Shared.Enum;
-using PersonalFinanceManager.Shared.Data.Entity;
-using PersonalFinanceManager.Shared.Services;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Helpers;
 
@@ -18,11 +16,11 @@ namespace PersonalFinanceManager.Infrastructure.Services
     {
         private static readonly string[] Scopes = { GMService.GmailService.Scope.GmailReadonly };
         private static readonly string ApplicationName = "Personal Finance Manager";
-        private readonly ITokenService _tokenService;
+        private readonly IExternalTokenService _tokenService;
         private readonly string _provider = "GmailToken";
 
 
-        public GmailService(ITokenService tokenService)
+        public GmailService(IExternalTokenService tokenService)
         {
             _tokenService = tokenService;
         }

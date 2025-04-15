@@ -5,15 +5,15 @@ using Microsoft.ML;
 using PersonalFinanceManager.Scheduler.Jobs;
 using PersonalFinanceManager.Scheduler.Models;
 using PersonalFinanceManager.Shared.Constants;
-using PersonalFinanceManager.Shared.Data.Entity;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Helpers;
-using PersonalFinanceManager.Shared.ML.Models;
 using Quartz;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.Shared.Services;
+
+using PersonalFinanceManager.Infrastructure.Data;
+using PersonalFinanceManager.Infrastructure.Services;
 
 public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
 {

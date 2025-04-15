@@ -1,19 +1,13 @@
-﻿using DocumentFormat.OpenXml.Drawing.Diagrams;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PersonalFinanceManager.Infrastructure.Data;
+using PersonalFinanceManager.Scheduler.Helpers;
 using PersonalFinanceManager.Scheduler.Models;
 using PersonalFinanceManager.Shared.Constants;
-using PersonalFinanceManager.Shared.Data;
-using PersonalFinanceManager.Shared.ML;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace PersonalFinanceManager.Scheduler.Jobs
 {

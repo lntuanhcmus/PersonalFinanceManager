@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 using PersonalFinanceManager.Scheduler.Jobs;
 using PersonalFinanceManager.Scheduler.Models;
 using PersonalFinanceManager.Scheduler.Services;
-using PersonalFinanceManager.Shared.Data;
-using PersonalFinanceManager.Shared.Services;
+using PersonalFinanceManager.Infrastructure.Data;
+
 using Serilog;
 using PersonalFinanceManager.Infrastructure.Services;
 
@@ -61,7 +61,7 @@ namespace PersonalFinanceManager.Scheduler.Host
                     });
 
                     services.AddScoped<IGmailService, GmailService>();
-                    services.AddScoped<ITokenService, TokenService>();
+                    services.AddScoped<IExternalTokenService, TokenExternalService>();
                     services.AddHttpClient();
                     services.AddSingleton<SchedulerService>();
                     services.AddTransient<TransactionUpdateJobDB>();

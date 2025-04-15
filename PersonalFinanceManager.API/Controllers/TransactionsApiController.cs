@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using PersonalFinanceManager.Shared.Services;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Models;
 using PersonalFinanceManager.Shared.Dto;
@@ -7,8 +6,9 @@ using System.Globalization;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.API.Model;
 using Microsoft.Extensions.Options;
-using PersonalFinanceManager.Shared.Data.Entity;
+using PersonalFinanceManager.Shared.Data;
 using AutoMapper;
+using PersonalFinanceManager.Infrastructure.Services;
 
 namespace PersonalFinanceManager.Controllers
 {

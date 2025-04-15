@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using PersonalFinanceManager.Shared.Data.Entity;
+﻿using PersonalFinanceManager.Shared.Data;
 using System.Globalization;
 
 namespace PersonalFinanceManager.Shared.Dto

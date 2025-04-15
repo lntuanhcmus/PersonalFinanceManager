@@ -1,5 +1,5 @@
-﻿using PersonalFinanceManager.Shared.Data;
-using PersonalFinanceManager.Shared.Data.Entity;
+﻿using PersonalFinanceManager.Infrastructure.Data;
+using PersonalFinanceManager.Shared.Data;
 
 namespace PersonalFinanceManager.API.Services
 {

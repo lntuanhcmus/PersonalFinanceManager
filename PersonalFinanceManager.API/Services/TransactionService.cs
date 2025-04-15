@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.Shared.Data;
+using PersonalFinanceManager.Infrastructure.Data;
 using PersonalFinanceManager.API.Helper;
 using PersonalFinanceManager.Shared.Constants;
 using PersonalFinanceManager.Shared.Dto;
@@ -7,7 +7,7 @@ using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
 using System.Text;
-using PersonalFinanceManager.Shared.Data.Entity;
+using PersonalFinanceManager.Shared.Data;
 using AutoMapper;
 
 namespace PersonalFinanceManager.API.Services

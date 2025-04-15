@@ -1,0 +1,11 @@
+﻿<h2>Welcome to Personal Finance Manager</h2>
+
+@if (User.Identity.IsAuthenticated)
+{
+    <p>Hello, @User.Identity.Name!</p>
+    <a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Logout</a>
+}
+else
+{
+    <p>Please <a asp-controller="Account" asp-action="Login">login</a> or <a asp-controller="Account" asp-action="Register">register</a>.</p>
+}

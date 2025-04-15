@@ -1,0 +1,28 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PersonalFinanceManager.Infrastructure.Data;
+using PersonalFinanceManager.Shared.Data;
+
+namespace PersonalFinanceManager.Infrastructure.Services
+{
+    public class TokenExternalService : IExternalTokenService
+    {
+        private readonly AppDbContext _dbContext;
+
+        public TokenExternalService(AppDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+        public async Task<ExternalToken> GetTokenAsync(string provider, string userEmail)
+        {
+            return await _dbContext.ExternalTokens
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.Provider == provider && t.UserEmail == userEmail);
+        }
+
+        public async Task SaveTokenAsync(ExternalToken token)
+        {
+            _dbContext.ExternalTokens.Add(token);
+            await _dbContext.SaveChangesAsync();
+        }
+    }
+}

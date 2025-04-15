@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PersonalFinanceManager.Shared.Data;
+using PersonalFinanceManager.Infrastructure.Data;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
-using PersonalFinanceManager.Shared.Data.Entity;
+using PersonalFinanceManager.Shared.Data;
 
 [Route("api/[controller]")]
 [ApiController]

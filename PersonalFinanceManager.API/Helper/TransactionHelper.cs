@@ -1,4 +1,4 @@
-﻿using PersonalFinanceManager.Shared.Data.Entity;
+﻿using PersonalFinanceManager.Shared.Data;
 
 namespace PersonalFinanceManager.API.Helper
 {

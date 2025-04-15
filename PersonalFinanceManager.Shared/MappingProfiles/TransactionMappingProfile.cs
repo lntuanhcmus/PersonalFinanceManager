@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using PersonalFinanceManager.Shared.Data.Entity;
+using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
 using System;
 using System.Collections.Generic;
