@@ -10,11 +10,11 @@ namespace PersonalFinanceManager.Controllers
     [Route("oauth")]
     public class OAuthController : ControllerBase
     {
-        private readonly GmailService _gmailService;
+        private readonly IGmailService _gmailService;
         private readonly TransactionService _transactionService;
         private readonly GmailServiceSettings _gmailSettings;
 
-        public OAuthController(GmailService gmailService,
+        public OAuthController(IGmailService gmailService,
                                TransactionService transactionService,
                                IOptions<GmailServiceSettings> gmailOptions)
         {
@@ -33,7 +33,7 @@ namespace PersonalFinanceManager.Controllers
                 // Kiểm tra hợp lệ, nếu không dùng mặc định
                 if (maxResult <= 0) maxResult = 10;
                 var credential = await _gmailService.ExchangeCodeForTokenAsync(code);
-                var transaction = await _gmailService.ExtractTransactionsAsync("credentials.json","token.json", maxResult);
+                var transaction = await _gmailService.ExtractTransactionsAsync("credentials.json", maxResult, credential);
                 if(transaction != null)
                 {
                     await _transactionService.SaveTransactions(transaction);

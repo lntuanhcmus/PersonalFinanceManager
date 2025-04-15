@@ -8,6 +8,7 @@ using PersonalFinanceManager.Scheduler.Services;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Services;
 using Serilog;
+using PersonalFinanceManager.Infrastructure.Services;
 
 namespace PersonalFinanceManager.Scheduler.Host
 {
@@ -59,7 +60,8 @@ namespace PersonalFinanceManager.Scheduler.Host
                            .LogTo(_ => { }, LogLevel.None);
                     });
 
-                    services.AddSingleton<GmailService>();
+                    services.AddScoped<IGmailService, GmailService>();
+                    services.AddScoped<ITokenService, TokenService>();
                     services.AddHttpClient();
                     services.AddSingleton<SchedulerService>();
                     services.AddTransient<TransactionUpdateJobDB>();

@@ -21,6 +21,8 @@ namespace PersonalFinanceManager.Shared.Data
 
         public DbSet<TransactionCorrection> TransactionCorrections { get; set; }
 
+        public DbSet<ExternalToken> ExternalTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

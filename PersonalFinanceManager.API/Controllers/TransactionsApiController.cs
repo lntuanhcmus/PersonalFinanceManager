@@ -16,14 +16,14 @@ namespace PersonalFinanceManager.Controllers
     [Route("api/[controller]")]
     public class TransactionsApiController : ControllerBase
     {
-        private readonly GmailService _gmailService;
+        private readonly IGmailService _gmailService;
         private readonly TransactionService _transactionService;
         private readonly CategoryService _categoryService;
         private readonly GmailServiceSettings _gmailSettings;
         private readonly IMapper _mapper;
 
 
-        public TransactionsApiController(GmailService gmailService,
+        public TransactionsApiController(IGmailService gmailService,
                                          TransactionService transactionService,
                                          CategoryService categoryService,
                                          IOptions<GmailServiceSettings> gmailOptions,
@@ -80,7 +80,7 @@ namespace PersonalFinanceManager.Controllers
             // Kiểm tra hợp lệ, nếu không dùng mặc định
             if (maxResult <= 0) maxResult = 10;
 
-            var transactions = await _gmailService.ExtractTransactionsAsync("credentials.json", "token.json", maxResult);
+            var transactions = await _gmailService.ExtractTransactionsAsync("credentials.json", maxResult);
             await _transactionService.SaveTransactions(transactions);
             return Ok();
         }

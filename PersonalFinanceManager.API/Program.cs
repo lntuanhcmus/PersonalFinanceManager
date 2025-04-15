@@ -4,9 +4,7 @@ using PersonalFinanceManager.API.Model;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Services;
 using System.Globalization;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using PersonalFinanceManager.Shared.MappingProfiles;
+using PersonalFinanceManager.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +27,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<GmailService>();
+builder.Services.AddScoped<IGmailService, GmailService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 //builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<CategoryService>();

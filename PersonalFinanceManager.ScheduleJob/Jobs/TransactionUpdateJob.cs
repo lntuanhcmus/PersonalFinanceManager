@@ -11,9 +11,9 @@ using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Helpers;
 using PersonalFinanceManager.Shared.ML.Models;
 using Quartz;
-using PersonalFinanceManager.Shared.Services;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using PersonalFinanceManager.Shared.Services;
 
 public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
 {
@@ -22,10 +22,11 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
     private readonly ILogger<TransactionUpdateJobDB> _logger;
     private readonly string _basePath;
     private readonly MLContext _mlContext;
-    private readonly ITransformer _categoryModel;
-    private readonly ITransformer _typeModel;
-    private readonly List<Category> _categories;
-    private readonly List<TransactionType> _transactionTypes;
+    private ITransformer _categoryModel;
+    private ITransformer _typeModel;
+    private List<Category> _categories;
+    private List<TransactionType> _transactionTypes;
+    private bool _isInitialized;
 
     public TransactionUpdateJobDB(
         IServiceProvider serviceProvider,
@@ -38,17 +39,50 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
         _logger = logger;
         _basePath = AppContext.BaseDirectory;
         _logger.LogInformation($"Khởi tạo {BackgroundJobConstant.TransactionUpdateJobDb} với base path: {_basePath}");
+        _mlContext = new MLContext();
+        _isInitialized = false;
+    }
+
+    public string JobName => BackgroundJobConstant.TransactionUpdateJobDb;
+    public string JobType => "DB";
+    public string CronSchedule => _config.Jobs.FirstOrDefault(j => j.JobName == JobName)?.CronSchedule ?? "0/5 * * * * ?";
+
+
+    private async Task InitializeAsync()
+    {
+        if (_isInitialized)
+        {
+            return;
+        }
 
         try
         {
-            _mlContext = new MLContext();
             var categoryModelPath = Path.Combine(_basePath, "Data/categoryModel.zip");
             var typeModelPath = Path.Combine(_basePath, "Data/typeModel.zip");
 
-            if (!File.Exists(categoryModelPath) || !File.Exists(typeModelPath))
+            const int maxRetries = 3;
+            const int delaySeconds = 3;
+            bool filesExist = false;
+
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                _logger.LogWarning("Không tìm thấy mô hình tại {CategoryPath} hoặc {TypePath}", categoryModelPath, typeModelPath);
-                throw new FileNotFoundException("Không tìm thấy file mô hình ML.");
+                if (File.Exists(categoryModelPath) && File.Exists(typeModelPath))
+                {
+                    filesExist = true;
+                    break;
+                }
+
+                _logger.LogInformation("Lần thử {Attempt}/{MaxRetries}: Không tìm thấy mô hình tại {CategoryPath} hoặc {TypePath}. Chờ {DelaySeconds} giây...",
+                    attempt, maxRetries, categoryModelPath, typeModelPath, delaySeconds);
+
+                await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
+            }
+
+            if (!filesExist)
+            {
+                _logger.LogWarning("Không tìm thấy mô hình tại {CategoryPath} hoặc {TypePath} sau {MaxRetries} lần thử.",
+                    categoryModelPath, typeModelPath, maxRetries);
+                return;
             }
 
             _logger.LogInformation("Tải mô hình category...");
@@ -60,9 +94,11 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                _categories = dbContext.Categories.ToList();
-                _transactionTypes = dbContext.TransactionTypes.ToList();
+                _categories = await dbContext.Categories.ToListAsync();
+                _transactionTypes = await dbContext.TransactionTypes.ToListAsync();
             }
+
+            _isInitialized = true;
         }
         catch (Exception ex)
         {
@@ -71,17 +107,23 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
         }
     }
 
-    public string JobName => BackgroundJobConstant.TransactionUpdateJobDb;
-    public string JobType => "DB";
-    public string CronSchedule => _config.Jobs.FirstOrDefault(j => j.JobName == JobName)?.CronSchedule ?? "0/5 * * * * ?";
 
     protected override async Task ExecuteJob(IJobExecutionContext context)
     {
+        // Khởi tạo trước khi thực thi
+        await InitializeAsync();
+
+        if (!_isInitialized)
+        {
+            _logger.LogWarning("Job không được khởi tạo thành công, bỏ qua thực thi.");
+            return;
+        }
+
         _logger.LogInformation($"Bắt đầu thực thi {BackgroundJobConstant.TransactionUpdateJobDb} tại {DateTime.Now}");
 
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var gmailService = scope.ServiceProvider.GetRequiredService<GmailService>();
+        var gmailService = scope.ServiceProvider.GetRequiredService<IGmailService>();
 
         try
         {
@@ -107,7 +149,6 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
             }
 
             var credentialsPath = Path.Combine(_basePath, parameters.CredentialsPath ?? "Data/credentials.json");
-            var tokenPath = Path.Combine(_basePath, parameters.TokenPath ?? "Data/token.json");
 
             if (!File.Exists(credentialsPath))
             {
@@ -117,7 +158,6 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
 
             var transactions = await gmailService.ExtractTransactionsAsync(
                 credentialsPath,
-                tokenPath,
                 parameters.MaxResults > 0 ? parameters.MaxResults : 10);
 
             _logger.LogInformation($"Đã lấy được {transactions.Count()} giao dịch.");
