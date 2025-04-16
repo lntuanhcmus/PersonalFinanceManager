@@ -1,4 +1,5 @@
-﻿@model PersonalFinanceManager.WebHost.Models.DashboardViewModel
+﻿<!-- PersonalFinanceManager.WebHost/Views/DashboardManagement/Index.cshtml -->
+@model PersonalFinanceManager.WebHost.Models.DashboardViewModel
 
 <div class="row mb-3">
     <div class="col">
@@ -53,7 +54,7 @@
     </div>
 </div>
 
-<!-- Biểu đồ Transaction -->
+<!-- Biểu đồ -->
 <div class="row mt-4">
     <div class="col-md-6">
         <h4>Phân bổ theo danh mục</h4>
@@ -72,7 +73,7 @@
     </div>
 </div>
 
-<!-- Budget -->
+<!-- Ngân sách -->
 <div class="row mt-4">
     <div class="col">
         <h4>Ngân sách</h4>
@@ -110,38 +111,60 @@
             });
 
             // Biểu đồ phân bổ danh mục
-        @if (Model.Summary.CategoryBreakdown != null && Model.Summary.CategoryBreakdown.Any())
-        {
-            @:var ctxCategory = document.getElementById('categoryChart').getContext('2d');
-            @:var categoryChart = new Chart(ctxCategory, {
-            @:type: 'pie',
-            @:data: {
-            @:labels: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Keys)),
-            @:datasets: [{
-            @:data: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Values)),
-            @:backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0']
-            @:        }]
-            @:    },
-            @:options: {
-            @:responsive: true,
-            @:plugins: {
-            @:legend: { position: 'top' },
-            @:title: { display: true, text: 'Phân bổ theo danh mục' }
-            @:        }
-            @:    }
-            @:});
-        }
+            @if (Model.Summary.CategoryBreakdown != null && Model.Summary.CategoryBreakdown.Any())
+            {
+                @:var ctxCategory = document.getElementById('categoryChart').getContext('2d');
+                @:var categoryChart = new Chart(ctxCategory, {
+                @:type: 'pie',
+                @:data: {
+                @:labels: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Keys)),
+                @:datasets: [{
+                @:data: @Html.Raw(Json.Serialize(Model.Summary.CategoryBreakdown.Values)),
+                @:backgroundColor: ['#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0']
+                @:}]
+                @:},
+                @:options: {
+                @:responsive: true,
+                @:plugins: {
+                @:legend: { position: 'top' },
+                @:title: { display: true, text: 'Phân bổ theo danh mục' }
+                @:}
+                @:}
+                @:});
+            }
 
             // Biểu đồ thu/chi theo tháng
-            fetch('http://localhost:8000/api/StatisticsApi/monthly-summary' + '@(Model.StartDate.HasValue ? "?startDate=" + Model.StartDate.Value.ToString("yyyy-MM-dd") : "")' + '@(Model.EndDate.HasValue ? "&endDate=" + Model.EndDate.Value.ToString("yyyy-MM-dd") : "")')
-                .then(response => response.json())
-                .then(data => {
-                    var labels = Object.keys(data);
-                    var incomeData = labels.map(key => data[key].income);
-                    var expenseData = labels.map(key => data[key].expense);
+            async function loadMonthlySummary() {
+                let url = '/DashboardManagement/GetMonthlySummary';
+                const params = new URLSearchParams();
+                @if (Model.StartDate.HasValue)
+                {
+                    @:params.append('startDate', '@Model.StartDate.Value.ToString("yyyy-MM-dd")');
+                }
+                @if (Model.EndDate.HasValue)
+                {
+                    @:params.append('endDate', '@Model.EndDate.Value.ToString("yyyy-MM-dd")');
+                }
+                if (params.toString()) {
+                    url += `?${params.toString()}`;
+                }
 
-                    var ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
-                    var monthlyChart = new Chart(ctxMonthly, {
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                    }
+                    const data = await response.json();
+                    const labels = Object.keys(data);
+                    const incomeData = labels.map(key => data[key].income);
+                    const expenseData = labels.map(key => data[key].expense);
+
+                    const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+                    new Chart(ctxMonthly, {
                         type: 'bar',
                         data: {
                             labels: labels,
@@ -169,52 +192,65 @@
                             }
                         }
                     });
-                })
-                .catch(error => console.error('Error fetching monthly data:', error));
-                                async function loadBudgetUsage() {
-            const response = await fetch('http://localhost:8000/api/statisticsApi/budget-usage');
-            const data = await response.json();
+                } catch (error) {
+                    console.error('Error fetching monthly data:', error);
+                    alert('Không thể tải dữ liệu thu/chi: ' + error.message);
+                }
+            }
 
-            const labels = data.map(d => d.categoryName);
-        const budgetAmounts = data.map(d => d.budgetAmount);
-        const spentAmounts = data.map(d => d.spentAmount);
-
-        const ctx = document.getElementById('budgetChart').getContext('2d');
-                    new Chart(ctx, {
-                type: 'bar',
-                        data: {
-                    labels: labels,
-                    datasets: [
-                                {
-                            label: 'Ngân sách',
-                            data: budgetAmounts,
-                                    backgroundColor: '#36A2EB'
-                    },
-                                {
-                            label: 'Đã chi',
-                                data: spentAmounts,
-                        backgroundColor: '#FF6384'
-                    }
-                ]
-            },
-                options: {
-                        responsive: true,
-                        plugins: {
-                            tooltip: {
-                            mode: 'index',
-                                intersect: false
-                            }
-                        },
-                    scales: {
-                    y: {
-                            beginAtZero: true
-                                }
-                        }
+            // Biểu đồ ngân sách
+            async function loadBudgetUsage() {
+                try {
+                    const response = await fetch('/DashboardManagement/GetBudgetUsage', {
+                        headers: {
+                            'Accept': 'application/json'
                         }
                     });
-                }
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                    }
+                    const data = await response.json();
+                    const labels = data.map(d => d.categoryName);
+                    const budgetAmounts = data.map(d => d.budgetAmount);
+                    const spentAmounts = data.map(d => d.spentAmount);
 
-                loadBudgetUsage();
-    });
+                    const ctx = document.getElementById('budgetChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Ngân sách',
+                                    data: budgetAmounts,
+                                    backgroundColor: '#36A2EB'
+                                },
+                                {
+                                    label: 'Đã chi',
+                                    data: spentAmounts,
+                                    backgroundColor: '#FF6384'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                tooltip: { mode: 'index', intersect: false }
+                            },
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error fetching budget data:', error);
+                    alert('Không thể tải dữ liệu ngân sách: ' + error.message);
+                }
+            }
+
+            // Gọi hàm
+            loadMonthlySummary();
+            loadBudgetUsage();
+        });
     </script>
 }

@@ -35,7 +35,7 @@ namespace PersonalFinanceManager.Infrastructure.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
@@ -74,7 +74,7 @@ namespace PersonalFinanceManager.Infrastructure.Services
         public async Task<bool> ValidateRefreshTokenAsync(string refreshToken, string userId)
         {
             var token = await _dbContext.RefreshTokens
-                .FirstOrDefaultAsync(rt => rt.Token == refreshToken && rt.UserId == userId);
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken && rt.UserId == int.Parse(userId));
 
             return token != null && !token.IsRevoked && token.ExpiresAt > DateTime.UtcNow;
         }

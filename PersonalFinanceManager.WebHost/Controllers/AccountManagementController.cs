@@ -38,7 +38,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await client.PostAsync("/account/register", content);
+            var response = await client.PostAsync("api/accountApi/register", content);
             if (response.IsSuccessStatusCode)
             {
                 TempData["SuccessMessage"] = "Registration successful! Please log in.";
@@ -71,10 +71,13 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await client.PostAsync("/account/login", content);
+            var response = await client.PostAsync("api/accountApi/login", content);
             if (response.IsSuccessStatusCode)
             {
-                var token = JsonSerializer.Deserialize<TokenDto>(await response.Content.ReadAsStringAsync());
+                var token = JsonSerializer.Deserialize<TokenDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
                 if (token != null)
                 {
                     // Lưu access token và refresh token vào cookie
@@ -95,7 +98,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                     });
 
                     TempData["SuccessMessage"] = "Login successful!";
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "TransactionsManagement");
                 }
             }
 

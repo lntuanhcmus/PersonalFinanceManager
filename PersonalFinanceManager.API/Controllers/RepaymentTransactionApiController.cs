@@ -1,32 +1,33 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
-using PersonalFinanceManager.Shared.Enum;
-using PersonalFinanceManager.Shared.Models;
-using System.Globalization;
-using static System.TimeZoneInfo;
 
 namespace PersonalFinanceManager.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class RepaymentTransactionApiController : ControllerBase
     {
         private readonly RepaymentTransactionService _repaymentTransactionService;
+        private readonly IMapper _mapper;
 
-        public RepaymentTransactionApiController(RepaymentTransactionService repaymentTransactionService)
+        public RepaymentTransactionApiController(
+            RepaymentTransactionService repaymentTransactionService,
+            IMapper mapper)
         {
             _repaymentTransactionService = repaymentTransactionService;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<ActionResult<RepaymentTransactionDto>> GetAll(string transactionId)
         {
             var transactionList = await _repaymentTransactionService.GetByTransactionId(transactionId);
-            var result = transactionList.Select(x => new RepaymentTransactionDto(x));
+            var result = _mapper.Map<IEnumerable<RepaymentTransactionDto>>(transactionList);
 
             return Ok(result);
         }
@@ -40,7 +41,7 @@ namespace PersonalFinanceManager.API.Controllers
             {
                 return NotFound();
             }
-            var result = new RepaymentTransactionDto(transaction);
+            var result = _mapper.Map<RepaymentTransactionDto>(transaction);
             return Ok(result);
         }
 
@@ -52,18 +53,7 @@ namespace PersonalFinanceManager.API.Controllers
                 if (transactionDto == null || string.IsNullOrEmpty(transactionDto.TransactionId))
                     return BadRequest("Dữ liệu không hợp lệ");
 
-
-                //var transaction = transactionDto.RevertTransactionFromDto();
-
-                var transaction = new RepaymentTransaction()
-                {
-                    Amount = transactionDto.Amount,
-                    CreatedAt = DateTime.Now,
-                    TransactionTime = DateTime.ParseExact(transactionDto.TransactionTime, "dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture),
-                    Description = transactionDto.Description,
-                    SenderName = transactionDto.SenderName,
-                    TransactionId = transactionDto.TransactionId
-                };
+                var transaction = _mapper.Map<RepaymentTransaction>(transactionDto);
 
                 await _repaymentTransactionService.AddTransaction(transaction);
                 return Ok(new { message = "Giao dịch hoàn trả được tạo thành công" });

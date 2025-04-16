@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PersonalFinanceManager.Infrastructure.Data;
 using PersonalFinanceManager.Shared.Data;
 
@@ -6,6 +7,7 @@ namespace PersonalFinanceManager.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CategoriesApiController : ControllerBase
     {
         private readonly AppDbContext _context;

@@ -36,7 +36,9 @@ namespace PersonalFinanceManager.Shared.Data
 
         public bool NeedsManualReview { get; set; }
 
+        public int? UserId { get; set; }
 
+        public AppUser User { get; set; } = null!;
 
         public ICollection<RepaymentTransaction> RepaymentTransactions { get; set; }
 

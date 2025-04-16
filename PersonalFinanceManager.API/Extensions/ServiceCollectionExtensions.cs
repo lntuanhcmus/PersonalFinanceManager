@@ -23,7 +23,7 @@ namespace PersonalFinanceManager.API.Extensions
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
                     b => b.MigrationsAssembly("PersonalFinanceManager.Infrastructure")));
 
-            services.AddIdentity<AppUser, IdentityRole>(options =>
+            services.AddIdentity<AppUser, IdentityRole<int>>(options =>
             {
                 options.Password.RequireDigit = true;
                 options.Password.RequiredLength = 8;
@@ -35,7 +35,7 @@ namespace PersonalFinanceManager.API.Extensions
             .AddDefaultTokenProviders();
 
             services.AddScoped<IGmailService, GmailService>();
-            services.AddScoped<IExternalTokenService, TokenExternalService>();
+            services.AddScoped<IExternalTokenService, ExternalTokenService>();
             services.AddScoped<TransactionService>();
             services.AddScoped<CategoryService>();
             services.AddScoped<BudgetService>();

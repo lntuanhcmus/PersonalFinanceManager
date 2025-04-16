@@ -12,7 +12,7 @@ namespace PersonalFinanceManager.Shared.Data
         public string Token { get; set; } = string.Empty;
 
         [Required]
-        public string UserId { get; set; } = string.Empty;
+        public int UserId { get; set; }
 
         public DateTime ExpiresAt { get; set; }
 

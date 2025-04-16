@@ -1,4 +1,6 @@
-﻿namespace PersonalFinanceManager.Shared.Data
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace PersonalFinanceManager.Shared.Data
 {
     public class ExternalToken
     {
@@ -27,5 +29,9 @@
         public long? ExpiresInSeconds { get; set; }
 
         public bool IsStale { get; set; }
+        
+        public int? UserId { get; set; }
+
+        public AppUser User { get; set; } = null!;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.IdentityModel.Tokens;
+using PersonalFinanceManager.WebHost.Handlers;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -28,11 +29,19 @@ builder.Services.AddCors(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
 // Configure HttpClient for API calls
 builder.Services.AddHttpClient("ApiClient", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
-});
+    client.BaseAddress = new Uri("http://localhost:8000/");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+}).AddHttpMessageHandler<BearerTokenHandler>();
+
+// Add BearerTokenHandler as a service
+builder.Services.AddTransient<BearerTokenHandler>();
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -63,15 +72,15 @@ builder.Services.AddAuthentication(options =>
                 context.Token = token;
             }
             return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            // Chuyển hướng đến trang Login nếu chưa authorize
+            context.HandleResponse();
+            context.Response.Redirect("/AccountManagement/Login?returnUrl=" + Uri.EscapeDataString(context.Request.Path + context.Request.QueryString));
+            return Task.CompletedTask;
         }
     };
-});
-
-
-builder.Services.AddHttpClient("ApiClient", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:8000/");
-    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

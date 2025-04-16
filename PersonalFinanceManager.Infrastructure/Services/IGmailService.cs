@@ -5,8 +5,11 @@ namespace PersonalFinanceManager.Infrastructure.Services
 {
     public interface IGmailService
     {
-        public Task<List<Transaction>> ExtractTransactionsAsync(string credentialsPath, int maxResult = 10, UserCredential? credential = null);
+        public Task<string> InitiateOAuthFlowAsync(string userId, string credentialsPath, string redirectUri);
 
-        public Task<UserCredential> ExchangeCodeForTokenAsync(string code);
+        public Task<UserCredential> ExchangeCodeForTokenAsync(string userId, string credentialsPath, string code);
+
+        public Task<List<Transaction>> ExtractTransactionsAsync(string userId, string credentialsPath, int maxResult = 10);
+
     }
 }

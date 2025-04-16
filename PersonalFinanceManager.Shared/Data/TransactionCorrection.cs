@@ -16,6 +16,10 @@
 
         public int CategoryId { get; set; }
 
+        public int? UserId { get; set; }
+
+        public AppUser User { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }

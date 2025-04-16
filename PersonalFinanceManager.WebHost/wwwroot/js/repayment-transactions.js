@@ -3,7 +3,7 @@
 window.RepaymentTransactions = window.RepaymentTransactions || {};
 
 RepaymentTransactions.fetchRepaymentTransactions = function (transactionId) {
-    fetch(`${Utilities.config.apiBaseUrl}/api/RepaymentTransactionApi?transactionId=${transactionId}`, {
+    fetch(`/TransactionsManagement/GetRepaymentTransactionsByTransactionId?transactionId=${transactionId}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json'
@@ -55,7 +55,7 @@ RepaymentTransactions.submitRepaymentForm = function () {
         data[key] = value;
     });
 
-    fetch(`${Utilities.config.apiBaseUrl}/api/RepaymentTransactionApi`, {
+    fetch(`/TransactionsManagement/AddRepaymentTransaction`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -106,8 +106,8 @@ RepaymentTransactions.submitEditRepaymentForm = function () {
         data[key] = value;
     });
 
-    fetch(`${Utilities.config.apiBaseUrl}/api/RepaymentTransactionApi`, {
-        method: 'PUT',
+    fetch(`/TransactionsManagement/EditRepaymentTransaction/${data.Id}`, {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -138,7 +138,7 @@ RepaymentTransactions.deleteRepayment = function (id) {
         return;
     }
 
-    fetch(`${Utilities.config.apiBaseUrl}/api/RepaymentTransactionApi/${id}`, {
+    fetch(`/TransactionsManagement/DeleteRepaymentTransaction/${id}`, {
         method: 'DELETE',
         headers: {
             'Accept': 'application/json'

@@ -9,11 +9,15 @@ using Microsoft.Extensions.Options;
 using PersonalFinanceManager.Shared.Data;
 using AutoMapper;
 using PersonalFinanceManager.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace PersonalFinanceManager.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TransactionsApiController : ControllerBase
     {
         private readonly IGmailService _gmailService;
@@ -51,18 +55,33 @@ namespace PersonalFinanceManager.Controllers
             int? page = 1,
             int? pageSize = 10)
         {
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if(!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+
             var result = await _transactionService.GetFilteredTransactionsAsync(
-                transactionId, startDate, endDate, minAmount, maxAmount,
-                categoryId, transactionTypeId, sourceAccount, content, status, page, pageSize);
+            userId,
+            transactionId, startDate, endDate, minAmount, maxAmount,
+            categoryId, transactionTypeId, sourceAccount, content, status, page, pageSize);
 
             return Ok(result);
+            
+
         }
 
 
         [HttpGet("get-by-id")]
         public async Task<ActionResult<TransactionDto>> GetById([FromQuery] string id)
         {
-            var transaction = _transactionService.GetById(id);
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+
+            var transaction = _transactionService.GetById(id, userId);
             if (transaction == null)
             {
                 return NotFound();
@@ -75,13 +94,18 @@ namespace PersonalFinanceManager.Controllers
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshFromGmail()
         {
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
             int maxResult = _gmailSettings.MaxResult;
 
             // Kiểm tra hợp lệ, nếu không dùng mặc định
             if (maxResult <= 0) maxResult = 10;
 
-            var transactions = await _gmailService.ExtractTransactionsAsync("credentials.json", maxResult);
-            await _transactionService.SaveTransactions(transactions);
+            var transactions = await _gmailService.ExtractTransactionsAsync(userId.ToString(), "credentials.json", maxResult);
+            await _transactionService.SaveTransactions(transactions, userId);
             return Ok();
         }
 
@@ -90,12 +114,17 @@ namespace PersonalFinanceManager.Controllers
         {
             try
             {
+                bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+                if (!isValid)
+                {
+                    return BadRequest("UserId không hợp lệ");
+                }
                 if (transactionDto == null || string.IsNullOrEmpty(transactionDto.TransactionId))
                     return BadRequest("Dữ liệu không hợp lệ");
 
                 var transaction = _mapper.Map<Transaction>(transactionDto);
                 transaction.Status = transactionDto.TransactionTypeId == (int)TransactionTypeEnum.Advance ? (int)TransactionStatusEnum.Pending : (int)TransactionStatusEnum.Success;
-
+                transaction.UserId = userId;
                 await _transactionService.AddTransaction(transaction);
                 return Ok();
             }
@@ -130,7 +159,12 @@ namespace PersonalFinanceManager.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTransaction(string id)
         {
-            var transaction = _transactionService.GetById(id);
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("User is invalid");
+            }
+            var transaction = _transactionService.GetById(id, userId);
             if (transaction == null)
                 return NotFound();
             if (transaction.TransactionTypeId != (int)TransactionTypeEnum.Income)
@@ -150,7 +184,7 @@ namespace PersonalFinanceManager.Controllers
 
         [HttpGet("export")]
         public async Task<IActionResult> ExportTransactions(
-            string transactionId = null,
+            string transactionId,
             DateTime? startDate = null,
             DateTime? endDate = null,
             decimal? minAmount = null,
@@ -161,12 +195,20 @@ namespace PersonalFinanceManager.Controllers
             string content = null,
             int? status = null)
         {
-            var fileBytes = await _transactionService.ExportFilteredTransactionsAsCsvAsync(
+            if (Int16.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out short userId))
+            {
+                var fileBytes = await _transactionService.ExportFilteredTransactionsAsCsvAsync(userId,
                 transactionId, startDate, endDate, minAmount, maxAmount,
                 categoryId, transactionTypeId, sourceAccount, content, status);
 
-            var fileName = $"transactions_{DateTime.Now:yyyyMMddHHmmss}.csv";
-            return File(fileBytes, "text/csv", fileName);
+                var fileName = $"transactions_{DateTime.Now:yyyyMMddHHmmss}.csv";
+                return File(fileBytes, "text/csv", fileName);
+            }
+            else
+            {
+                return BadRequest("userId is invalid");
+            }
+            
         }
 
     }

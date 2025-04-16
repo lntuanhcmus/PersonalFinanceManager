@@ -15,6 +15,7 @@ namespace PersonalFinanceManager.API.Services
             _context = context;
         }
         public async Task<PagedResponse<BudgetDto>> GetFilteredBudgetsAsync(
+            int? userId,
             int? categoryId,
             DateTime? startDate,
             DateTime? endDate,
@@ -30,6 +31,9 @@ namespace PersonalFinanceManager.API.Services
                 .AsQueryable();
 
             // Apply filters
+
+            if (userId.HasValue)
+                query = query.Where(t => t.UserId == userId);
 
             if (startDate.HasValue)
             {
@@ -113,9 +117,9 @@ namespace PersonalFinanceManager.API.Services
             }
         }
 
-        public Budget GetById(int id)
+        public Budget GetById(int id, int userId)
         {
-            return _context.Budgets.Include(x => x.Category).FirstOrDefault(x => x.Id == id);
+            return _context.Budgets.Include(x => x.Category).FirstOrDefault(x => x.Id == id && x.UserId == userId);
         }
     }
 }

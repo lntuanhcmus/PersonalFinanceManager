@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace PersonalFinanceManager.Shared.Data
 {
-    public class AppUser : IdentityUser
+    public class AppUser : IdentityUser<int>
     {
         // Thuộc tính cơ bản bổ sung
         [MaxLength(100)]

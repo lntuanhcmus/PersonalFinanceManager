@@ -32,6 +32,7 @@ namespace PersonalFinanceManager.API.Services
         }
 
         public async Task<PagedResponse<TransactionDto>> GetFilteredTransactionsAsync(
+            int? userId,
             string transactionId,
             DateTime? startDate,
             DateTime? endDate,
@@ -45,7 +46,7 @@ namespace PersonalFinanceManager.API.Services
             int? page,
             int? pageSize)
         {
-            var query = ApplyTransactionFilters(transactionId, startDate, endDate, minAmount, maxAmount,
+            var query = ApplyTransactionFilters(userId, transactionId, startDate, endDate, minAmount, maxAmount,
                                                 categoryId, transactionTypeId, sourceAccount, content, status);
 
             // Lấy tổng số phần tử trước phân trang
@@ -77,6 +78,7 @@ namespace PersonalFinanceManager.API.Services
         }
 
         public async Task<byte[]> ExportFilteredTransactionsAsCsvAsync(
+            int? userId,
             string transactionId,
             DateTime? startDate,
             DateTime? endDate,
@@ -88,7 +90,7 @@ namespace PersonalFinanceManager.API.Services
             string content,
             int? status)
         {
-            var query = ApplyTransactionFilters(transactionId, startDate, endDate, minAmount, maxAmount,
+            var query = ApplyTransactionFilters(userId, transactionId, startDate, endDate, minAmount, maxAmount,
                                                 categoryId, transactionTypeId, sourceAccount, content, status)
                                                 .OrderByDescending(t => t.TransactionTime);
 
@@ -124,6 +126,7 @@ namespace PersonalFinanceManager.API.Services
         }
 
         private IQueryable<Transaction> ApplyTransactionFilters(
+            int? userId,
             string transactionId,
             DateTime? startDate,
             DateTime? endDate,
@@ -140,6 +143,9 @@ namespace PersonalFinanceManager.API.Services
                 .Include(t => t.TransactionType)
                 .Include(t => t.Category)
                 .AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(t => t.UserId >= userId);
 
             if (!string.IsNullOrEmpty(transactionId))
                 query = query.Where(t => t.TransactionId.Contains(transactionId));
@@ -174,16 +180,16 @@ namespace PersonalFinanceManager.API.Services
             return query;
         }
 
-        public Transaction GetById(string id)
+        public Transaction GetById(string id, int? userId = null)
         {
-            return _context.Transactions.Include(x=>x.TransactionType).Include(x=>x.Category).FirstOrDefault(x=>x.TransactionId == id);
+            return _context.Transactions.Include(x=>x.TransactionType).Include(x=>x.Category).FirstOrDefault(x=>x.TransactionId == id && (userId == null || x.UserId == userId));
         }
 
-        public async Task<FinancialSummary> GetFinancialSummaryAsync(DateTime? startDate, DateTime? endDate)
+        public async Task<FinancialSummary> GetFinancialSummaryAsync(DateTime? startDate, DateTime? endDate, int userId)
         {
             var transactions = await _context.Transactions
                 .Include(t => t.RepaymentTransactions) // để tránh truy vấn lại trong vòng lặp
-                .Where(t => (!startDate.HasValue || t.TransactionTime >= startDate) &&
+                .Where(t => t.UserId == userId && (!startDate.HasValue || t.TransactionTime >= startDate) &&
                             (!endDate.HasValue || t.TransactionTime <= endDate))
                 .ToListAsync();
 
@@ -254,7 +260,7 @@ namespace PersonalFinanceManager.API.Services
             }
         }
 
-        public async Task SaveTransactions(List<Transaction> transactions)
+        public async Task SaveTransactions(List<Transaction> transactions, int? userId = null)
         {
             var existingIds = _context.Transactions.Select(t => t.TransactionId).ToList();
             var newTransactions = transactions.Where(t => !existingIds.Contains(t.TransactionId)).ToList();

@@ -9,53 +9,109 @@ using System.Globalization;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Helpers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace PersonalFinanceManager.Infrastructure.Services
 {
     public class GmailService: IGmailService
     {
-        private static readonly string[] Scopes = { GMService.GmailService.Scope.GmailReadonly };
+        private static readonly string[] Scopes = { GMService.GmailService.Scope.GmailReadonly, "https://www.googleapis.com/auth/userinfo.email" };
         private static readonly string ApplicationName = "Personal Finance Manager";
         private readonly IExternalTokenService _tokenService;
         private readonly string _provider = "GmailToken";
+        private readonly UserManager<AppUser> _userManager;
 
 
-        public GmailService(IExternalTokenService tokenService)
+        public GmailService(IExternalTokenService tokenService, UserManager<AppUser> userManager)
         {
             _tokenService = tokenService;
+            _userManager = userManager;
         }
 
-        public async Task<List<Transaction>> ExtractTransactionsAsync(string credentialsPath, int maxResult = 10, UserCredential? credentialData = null)
-        {
-            UserCredential credential;
-            if (credentialData == null)
-            {
-                var existToken = await _tokenService.GetTokenAsync(_provider);
-                TokenResponse? token;
-                if (existToken == null)
-                {
-                    using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
-                    {
-                        var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-                        var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
-                        {
-                            ClientSecrets = clientSecrets,
-                            Scopes = Scopes
-                        });
-                        credential = await AuthorizeManually(flow);
-                    }
+        //Main Action
 
+        // Khởi tạo luồng OAuth và trả về URL để người dùng cấp quyền
+        public async Task<string> InitiateOAuthFlowAsync(string userId, string credentialsPath, string redirectUri)
+        {
+            using var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read);
+            var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+            var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+            {
+                ClientSecrets = clientSecrets,
+                Scopes = Scopes
+            });
+
+            var authUrl = flow.CreateAuthorizationCodeRequest(redirectUri);
+            return authUrl.Build().ToString() + "&access_type=offline&prompt=consent&state=" + userId.ToString();
+        }
+
+        public async Task<UserCredential> ExchangeCodeForTokenAsync(string userId, string credentialsPath, string code)
+        {
+            using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+            {
+                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+                var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+                {
+                    ClientSecrets = clientSecrets,
+                    Scopes = Scopes
+                    // Không cần DataStore ở đây nữa
+                });
+
+                var token = await flow.ExchangeCodeForTokenAsync("user", code, "http://localhost:8000/oauth/callback", CancellationToken.None);
+                var credential = new UserCredential(flow, "user", token);
+
+                var service = new GMService.GmailService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = credential,
+                    ApplicationName = ApplicationName
+                });
+
+                var userProfile = await service.Users.GetProfile("me").ExecuteAsync();
+                var userEmail = userProfile.EmailAddress;
+
+                var user = await _userManager.FindByIdAsync(userId);
+
+                if(user != null && user.Email == userEmail)
+                {
+                    var externalToken = new ExternalToken
+                    {
+                        Provider = _provider,
+                        UserEmail = userEmail,
+                        AccessToken = token.AccessToken,
+                        RefreshToken = token.RefreshToken,
+                        TokenType = token.TokenType,
+                        Scope = token.Scope,
+                        IdToken = token.IdToken,
+                        Issued = token.Issued,
+                        IssuedUtc = token.IssuedUtc,
+                        ExpiresAtUtc = token.IssuedUtc.AddSeconds(token.ExpiresInSeconds ?? 3600),
+                        ExpiresInSeconds = token.ExpiresInSeconds,
+                        IsStale = false,
+                        UserId = user.Id,
+                    };
+                    await _tokenService.SaveTokenAsync(externalToken);
                 }
                 else
                 {
-                    token = existToken.ToTokenResponse();
-                    credential = await GetCredentialAsync(credentialsPath, token);
+                    throw new Exception("Người dùng không khớp với email từ Gmail API");
                 }
+
+                return credential;
             }
-            else
-            {
-                credential = credentialData;
-            }
+        }
+
+        public async Task<List<Transaction>> ExtractTransactionsAsync(string userId, string credentialsPath, int maxResult = 10)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                throw new Exception("Không tìm thấy người dùng");
+
+            var token = await _tokenService.GetTokenAsync(_provider, user.Email);
+            if (token == null)
+                throw new Exception("Không tìm thấy token Gmail cho người dùng");
+
+            var credential = await GetCredentialAsync(credentialsPath, token.ToTokenResponse(), userId);
 
             var service = new GMService.GmailService(new BaseClientService.Initializer()
             {
@@ -65,40 +121,38 @@ namespace PersonalFinanceManager.Infrastructure.Services
 
             var messages = await GetMessagesAsync(service, maxResult);
 
-            var transactions = await ExtractTransactionsFromMessagesAsync(service, messages);
+            var transactions = await ExtractTransactionsFromMessagesAsync(service, messages, user.Id);
 
             return transactions;
         }
 
-        private async Task<UserCredential> GetCredentialAsync(string credentialsPath, TokenResponse? token)
+
+        //Common Function
+
+
+        private async Task<UserCredential> GetCredentialAsync(string credentialsPath, TokenResponse token, string userId)
         {
-            if (token == null)
+            using var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read);
+            var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+            var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
-                throw new Exception("Token is not provided");
-            }
+                ClientSecrets = clientSecrets,
+                Scopes = Scopes
+            });
 
-            using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
+            var credential = new UserCredential(flow, userId, token);
+            if (credential.Token.IsExpired(flow.Clock))
             {
-                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-                var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
-                {
-                    ClientSecrets = clientSecrets,
-                    Scopes = Scopes
-                });
+                if (string.IsNullOrEmpty(token.RefreshToken))
+                    throw new Exception("Refresh token không tồn tại, yêu cầu người dùng xác thực lại");
 
-                UserCredential credential = new UserCredential(flow, "user", token);
-
-                if (credential.Token.IsExpired(flow.Clock))
-                {
-                    await credential.RefreshTokenAsync(CancellationToken.None);
-                    var newToken = credential.Token.ToExternalToken(_provider);
-                    await _tokenService.SaveTokenAsync(newToken);
-                }
-
-                return credential;
+                await credential.RefreshTokenAsync(CancellationToken.None);
+                var newToken = credential.Token.ToExternalToken(_provider);
+                newToken.UserId = int.Parse(userId); // Chuyển từ string sang int
+                await _tokenService.SaveTokenAsync(newToken);
             }
+            return credential;
         }
-
 
         private async Task<List<GMService.Data.Message>> GetMessagesAsync(GMService.GmailService service, int maxResult)
         {
@@ -110,7 +164,7 @@ namespace PersonalFinanceManager.Infrastructure.Services
             return (List<GMService.Data.Message>)(response.Messages ?? new List<GMService.Data.Message>());
         }
 
-        private async Task<List<Transaction>> ExtractTransactionsFromMessagesAsync(GMService.GmailService service, List<Google.Apis.Gmail.v1.Data.Message> messages)
+        private async Task<List<Transaction>> ExtractTransactionsFromMessagesAsync(GMService.GmailService service, List<Google.Apis.Gmail.v1.Data.Message> messages, int userId)
         {
             var transactions = new List<Transaction>();
 
@@ -140,7 +194,8 @@ namespace PersonalFinanceManager.Infrastructure.Services
                     Amount = decimal.Parse(result["Số tiền"].Replace(" VND", "").Replace(",", ""), CultureInfo.InvariantCulture),
                     Description = result["Nội dung chuyển tiền"],
                     TransactionTypeId = (int)TransactionTypeEnum.Expense,
-                    Status = (int)TransactionStatusEnum.Success
+                    Status = (int)TransactionStatusEnum.Success,
+                    UserId = userId,
                 });
             }
 
@@ -232,36 +287,6 @@ namespace PersonalFinanceManager.Infrastructure.Services
             // Trả về thông tin xác thực
             return new UserCredential(flow, "user", token);
         }
-
-
-
-
-
-
-        public async Task<UserCredential> ExchangeCodeForTokenAsync(string code)
-        {
-            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
-            {
-                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-                var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
-                {
-                    ClientSecrets = clientSecrets,
-                    Scopes = Scopes
-                    // Không cần DataStore ở đây nữa
-                });
-
-                var token = await flow.ExchangeCodeForTokenAsync("user", code, "http://localhost:8000/oauth/callback", CancellationToken.None);
-                var credential = new UserCredential(flow, "user", token);
-
-                var newToken = token.ToExternalToken(_provider);
-                await _tokenService.SaveTokenAsync(newToken);
-
-                return credential;
-            }
-        }
-
-
-
 
         //// Hàm yêu cầu xác thực lại
         //private async Task<UserCredential> ReauthorizeUser(GoogleAuthorizationCodeFlow flow)

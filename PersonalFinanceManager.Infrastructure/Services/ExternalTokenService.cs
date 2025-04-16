@@ -4,11 +4,11 @@ using PersonalFinanceManager.Shared.Data;
 
 namespace PersonalFinanceManager.Infrastructure.Services
 {
-    public class TokenExternalService : IExternalTokenService
+    public class ExternalTokenService : IExternalTokenService
     {
         private readonly AppDbContext _dbContext;
 
-        public TokenExternalService(AppDbContext dbContext)
+        public ExternalTokenService(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }

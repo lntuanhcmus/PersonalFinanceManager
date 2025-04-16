@@ -13,9 +13,32 @@
         <a href="@Url.Action("AddTransaction")" class="btn btn-success me-2">
             <i class="bi bi-plus-circle"></i> Thêm giao dịch
         </a>
-        <a href="@Url.Action("RefreshFromGmail")" class="btn btn-info text-white">
+        <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#gmailModal">
             <i class="bi bi-arrow-clockwise"></i> Lấy từ Gmail
-        </a>
+        </button>
+    </div>
+</div>
+
+<!-- Modal cho Gmail -->
+<div class="modal fade" id="gmailModal" tabindex="-1" aria-labelledby="gmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gmailModalLabel">Kết nối Gmail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Để lấy giao dịch từ Gmail, bạn cần kết nối tài khoản Gmail của mình.</p>
+                <button id="connectGmailBtn" class="btn btn-primary">
+                    <i class="bi bi-envelope"></i> Kết nối Gmail
+                    <span id="gmailSpinner" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                </button>
+                <p class="mt-3 text-muted">Chúng tôi sẽ chỉ đọc các email liên quan đến giao dịch ngân hàng.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -34,7 +57,7 @@
     </div>
 }
 
-<!-- Form tìm kiếm nằm ngang -->
+<!-- Form tìm kiếm và bảng giao dịch (giữ nguyên) -->
 <div class="row mb-3 transaction-list">
     <div class="col">
         <form asp-action="Index" method="get" id="searchForm">
@@ -67,7 +90,6 @@
                         <option value="">-- Chọn Loại giao dịch --</option>
                     </select>
                 </div>
-                
             </div>
             <div class="row">
                 <div class="form-group mb-2 col-2">
@@ -130,7 +152,6 @@
                 <tbody>
                     @if (Model != null && Model.Transactions.Any())
                     {
-                        
                         int index = 1;
                         foreach (var item in Model.Transactions)
                         {
@@ -168,7 +189,7 @@
                                     <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })" class="btn btn-sm btn-primary mb-2">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    @if(item.TransactionTypeId == (int)TransactionTypeEnum.Income)
+                                    @if (item.TransactionTypeId == (int)TransactionTypeEnum.Income)
                                     {
                                         <form asp-action="DeleteTransaction" method="post" class="d-inline delete-form" id="delete-form-@item.TransactionId">
                                             <input type="hidden" name="id" value="@item.TransactionId" />
@@ -205,17 +226,17 @@
                         content = Model.Content,
                         page
                     }),
-                    new PagedListRenderOptions
-                    {
-                        LiElementClasses = new[] { "page-item" },
-                        PageClasses = new[] { "page-link" },
-                        DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
-                        DisplayLinkToNextPage = PagedListDisplayMode.Always,
-                        LinkToPreviousPageFormat = "<i class='bi bi-chevron-left'></i>",
-                        LinkToNextPageFormat = "<i class='bi bi-chevron-right'></i>",
-                        MaximumPageNumbersToDisplay = 5, // Giới hạn số nút trang hiển thị
-                        DisplayEllipsesWhenNotShowingAllPageNumbers = true // Hiển thị "..." khi có nhiều trang
-                    })
+                         new PagedListRenderOptions
+                {
+                    LiElementClasses = new[] { "page-item" },
+                    PageClasses = new[] { "page-link" },
+                    DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                    DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                    LinkToPreviousPageFormat = "<i class='bi bi-chevron-left'></i>",
+                    LinkToNextPageFormat = "<i class='bi bi-chevron-right'></i>",
+                    MaximumPageNumbersToDisplay = 5,
+                    DisplayEllipsesWhenNotShowingAllPageNumbers = true
+                })
             </div>
 
             <div class="d-flex justify-content-center align-items-center mt-2 gap-2">
@@ -235,26 +256,27 @@
 @section Scripts {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             flatpickr('#startDate', {
-                dateFormat: 'd/m/Y', // Định dạng hiển thị: dd/MM/yyyy
-                allowInput: true,    // Cho phép nhập tay
+                dateFormat: 'd/m/Y',
+                allowInput: true,
                 onClose: function (selectedDates, dateStr, instance) {
-                    // Cập nhật giá trị khi chọn ngày
                     instance.element.value = dateStr;
                 }
             });
 
             flatpickr('#endDate', {
-                dateFormat: 'd/m/Y', // Định dạng hiển thị: dd/MM/yyyy
-                allowInput: true,    // Cho phép nhập tay
+                dateFormat: 'd/m/Y',
+                allowInput: true,
                 onClose: function (selectedDates, dateStr, instance) {
-                    // Cập nhật giá trị khi chọn ngày
                     instance.element.value = dateStr;
                 }
             });
+
             document.querySelectorAll('.delete-btn').forEach(function (button) {
                 button.addEventListener('click', function () {
                     var formId = this.getAttribute('data-form-id');
@@ -263,25 +285,62 @@
                     showConfirmationModal(
                         'Bạn có chắc muốn xóa giao dịch này?',
                         function () {
-                            form.submit(); // Submit form khi xác nhận
+                            form.submit();
                         }
                     );
                 });
             });
+
+            // Xử lý nút Kết nối Gmail
+            document.getElementById('connectGmailBtn').addEventListener('click', async function () {
+                const button = this;
+                const spinner = document.getElementById('gmailSpinner');
+                button.disabled = true;
+                spinner.style.display = 'inline-block';
+
+                try {
+                    const response = await fetch('https://localhost:5000/api/gmail/initiate-oauth', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('jwtToken') // Giả sử dùng JWT
+                        }
+                    });
+
+                    const result = await response.json();
+                    if (result.authUrl) {
+                        window.location.href = result.authUrl; // Chuyển hướng đến Google OAuth
+                    } else {
+                        throw new Error('Không lấy được URL xác thực');
+                    }
+                } catch (error) {
+                    alert('Lỗi khi kết nối Gmail: ' + error.message);
+                    button.disabled = false;
+                    spinner.style.display = 'none';
+                }
+            });
         });
 
         function resetForm() {
-            // Chuyển hướng về Index mà không có tham số lọc
             window.location.href = '@Url.Action("Index", "TransactionsManagement")';
         }
 
         function goToPage() {
             var page = document.getElementById('goToPage').value;
             if (page && page >= 1 && page <= @Model.PagedTransactions.PageCount) {
-                window.location.href = '@Url.Action("Index", new { /* Các param */ page = "__page__" })'.replace('__page__', page);
+                window.location.href = '@Url.Action("Index", new { transactionId = Model.TransactionId, startDate = Model.StartDate, endDate = Model.EndDate, minAmount = Model.MinAmount, maxAmount = Model.MaxAmount, categoryId = Model.CategoryId, sourceAccount = Model.SourceAccount, content = Model.Content, page = "__page__" })'.replace('__page__', page);
             }
         }
 
-    </script>
-    
+        // Đóng modal sau khi xác thực thành công
+        @if (TempData["Success"] != null || TempData["Error"] != null)
+        {
+                <script>
+                    var gmailModal = document.getElementById('gmailModal');
+                    var modal = bootstrap.Modal.getInstance(gmailModal);
+                    if (modal) {
+                        modal.hide();
+                            }
+        </script>
+        }
+        </script>
 }

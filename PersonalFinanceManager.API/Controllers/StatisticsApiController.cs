@@ -5,11 +5,14 @@ using PersonalFinanceManager.API.Helper;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Shared.Enum;
 using PersonalFinanceManager.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace PersonalFinanceManager.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class StatisticsApiController : Controller
     {
         private readonly AppDbContext _context;
@@ -21,15 +24,23 @@ namespace PersonalFinanceManager.API.Controllers
         }
 
         [HttpGet("budget-usage")]
-        public IActionResult GetBudgetUsage()
+        public async Task<IActionResult> GetBudgetUsage()
         {
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+
             var budgets = _context.Budgets
                 .Include(b => b.Category)
+                .Where(x=>x.UserId == userId)
                 .ToList();
 
             var transactions = _context.Transactions
                 .Include(t => t.TransactionType)
                 .Include(t => t.RepaymentTransactions)
+                .Where(x => x.UserId == userId)
                 .ToList();
 
             var expenseTypeId = _context.TransactionTypes
@@ -52,7 +63,7 @@ namespace PersonalFinanceManager.API.Controllers
                     b.EndDate
                 );
 
-                return new
+                return new BudgetUsage
                 {
                     CategoryName = b.Category?.Name,
                     BudgetAmount = b.Amount,
@@ -66,15 +77,26 @@ namespace PersonalFinanceManager.API.Controllers
         [HttpGet("summary")]
         public async Task<ActionResult<FinancialSummary>> GetFinancialSummary(DateTime? startDate, DateTime? endDate)
         {
-            var summary = await _transactionService.GetFinancialSummaryAsync(startDate, endDate);
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+            var summary = await _transactionService.GetFinancialSummaryAsync(startDate, endDate, userId);
             return Ok(summary);
         }
 
         [HttpGet("monthly-summary")]
         public async Task<ActionResult<Dictionary<string, MonthlySummary>>> GetMonthlySummary(DateTime? startDate, DateTime? endDate)
         {
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+
             var transactions = _transactionService.GetTransactions()
-                .Where(t => (!startDate.HasValue || t.TransactionTime >= startDate) &&
+                .Where(t => t.UserId == userId && (!startDate.HasValue || t.TransactionTime >= startDate) &&
                             (!endDate.HasValue || t.TransactionTime <= endDate))
                 .ToList();
 

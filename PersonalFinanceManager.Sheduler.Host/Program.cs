@@ -61,7 +61,7 @@ namespace PersonalFinanceManager.Scheduler.Host
                     });
 
                     services.AddScoped<IGmailService, GmailService>();
-                    services.AddScoped<IExternalTokenService, TokenExternalService>();
+                    services.AddScoped<IExternalTokenService, ExternalTokenService>();
                     services.AddHttpClient();
                     services.AddSingleton<SchedulerService>();
                     services.AddTransient<TransactionUpdateJobDB>();

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
@@ -8,12 +9,13 @@ using PersonalFinanceManager.WebHost.Helper;
 using PersonalFinanceManager.WebHost.Models;
 using System.Globalization;
 using System.Text;
-using System.Text.Json;
+using Newtonsoft.Json;
 using X.PagedList;
 using X.PagedList.Extensions;
 
 namespace PersonalFinanceManager.WebHost.Controllers
 {
+    [Authorize]
     public class BudgetsManagementController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -51,8 +53,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var pagedResponse = JsonSerializer.Deserialize<PagedResponse<BudgetDto>>(json, options);
+                var pagedResponse = JsonConvert.DeserializeObject<PagedResponse<BudgetDto>>(json);
                 pagedBudgets = new StaticPagedList<BudgetDto>(
                     pagedResponse.Items,
                     pagedResponse.PageNumber,
@@ -130,8 +131,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var budgetDto = JsonSerializer.Deserialize<BudgetDto>(json, options);
+                var budgetDto = JsonConvert.DeserializeObject<BudgetDto>(json);
                 var model = new DetailBudgetViewModel()
                 {
                     CategoryId = budgetDto.CategoryId,
@@ -174,7 +174,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             };
 
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var json = JsonSerializer.Serialize(budgetDto);
+            var json = JsonConvert.SerializeObject(budgetDto);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.PutAsync($"api/budgetsApi/{budgetDto.Id}", content);
 

@@ -27,6 +27,7 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
     private List<Category> _categories;
     private List<TransactionType> _transactionTypes;
     private bool _isInitialized;
+    private readonly string _provider = "GmailToken";
 
     public TransactionUpdateJobDB(
         IServiceProvider serviceProvider,
@@ -135,6 +136,12 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
                 : JsonSerializer.Deserialize<GmailJobParameters>(jobConfig.ParametersJson);
             _logger.LogInformation("Tham số job: {Parameters}", JsonSerializer.Serialize(parameters));
 
+            var usersWithTokens = await dbContext.ExternalTokens
+                .Where(t => t.Provider == _provider && !t.IsStale)
+                .Select(t => t.UserId)
+                .Distinct()
+                .ToListAsync();
+
             if (!parameters.IsEnabled)
             {
                 _logger.LogInformation("TransactionUpdateJobDB is disabled. Skipping.");
@@ -149,21 +156,25 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
             }
 
             var credentialsPath = Path.Combine(_basePath, parameters.CredentialsPath ?? "Data/credentials.json");
-
             if (!File.Exists(credentialsPath))
             {
                 _logger.LogError("File credentials không tồn tại: {Path}", credentialsPath);
                 throw new FileNotFoundException("Không tìm thấy credentials.json", credentialsPath);
             }
+            foreach (var userId in usersWithTokens)
+            {
+                try
+                {
+                    var transactions = await gmailService.ExtractTransactionsAsync(userId.ToString(), credentialsPath, parameters.MaxResults > 0 ? parameters.MaxResults : 10);
 
-            var transactions = await gmailService.ExtractTransactionsAsync(
-                credentialsPath,
-                parameters.MaxResults > 0 ? parameters.MaxResults : 10);
-
-            _logger.LogInformation($"Đã lấy được {transactions.Count()} giao dịch.");
-
-            await SaveTransactions(dbContext, transactions);
-
+                    _logger.LogInformation($"UserId: {userId} Đã lấy được {transactions.Count()} giao dịch.");
+                    await SaveTransactions(dbContext, transactions);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Lỗi khi xử lý giao dịch cho người dùng {userId}: {ex.Message}");
+                }
+            }
             _logger.LogInformation("Hoàn tất TransactionUpdateJobDB tại {Time}", DateTime.Now);
         }
         catch (Exception ex)

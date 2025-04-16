@@ -6,18 +6,24 @@ using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Models;
 using System.Globalization;
 using PersonalFinanceManager.Shared.Data;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using AutoMapper;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class BudgetsApiController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly BudgetService _budgetService;
+    private readonly IMapper _mapper;
 
-    public BudgetsApiController(AppDbContext context, BudgetService budgetService)
+    public BudgetsApiController(AppDbContext context, BudgetService budgetService, IMapper mapper)
     {
         _context = context;
         _budgetService = budgetService;
+        _mapper = mapper;
     }
 
     // GET: api/budgets
@@ -33,7 +39,12 @@ public class BudgetsApiController : ControllerBase
             int? page = 1,
             int? pageSize = 10)
     {
-        var result = await _budgetService.GetFilteredBudgetsAsync(
+        bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+        if (!isValid)
+        {
+            return BadRequest("UserId không hợp lệ");
+        }
+        var result = await _budgetService.GetFilteredBudgetsAsync(userId,
             categoryId, startDate, endDate, minAmount, maxAmount, period, page, pageSize);
 
         return Ok(result);
@@ -54,6 +65,12 @@ public class BudgetsApiController : ControllerBase
     {
         try
         {
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+
             if (budgetDto == null)
                 return BadRequest("Dữ liệu không hợp lệ");
 
@@ -63,7 +80,8 @@ public class BudgetsApiController : ControllerBase
                 StartDate = DateTime.ParseExact(budgetDto.StartDate, "dd/MM/yyyy", CultureInfo.InvariantCulture),
                 EndDate = !String.IsNullOrEmpty(budgetDto.EndDate) ? DateTime.ParseExact(budgetDto.EndDate, "dd/MM/yyyy", CultureInfo.InvariantCulture).AddDays(1).AddTicks(-1): null,
                 CategoryId = budgetDto.CategoryId,
-                Period = budgetDto.Period
+                Period = budgetDto.Period,
+                UserId = userId
             };
 
 
@@ -86,7 +104,13 @@ public class BudgetsApiController : ControllerBase
             if (budgetDto == null || budgetDto.Id != id)
                 return BadRequest("Dữ liệu không hợp lệ");
 
-            var budget = _budgetService.GetById(id);
+            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+            if (!isValid)
+            {
+                return BadRequest("UserId không hợp lệ");
+            }
+
+            var budget = _budgetService.GetById(id, userId);
             if (budget == null) return NotFound();
 
             // Cập nhật thông tin cơ bản
@@ -109,7 +133,12 @@ public class BudgetsApiController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBudget(int id)
     {
-        var budget = _budgetService.GetById(id);
+        bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+        if (!isValid)
+        {
+            return BadRequest("UserId không hợp lệ");
+        }
+        var budget = _budgetService.GetById(id, userId);
         if (budget == null)
             return NotFound();
 
@@ -120,12 +149,18 @@ public class BudgetsApiController : ControllerBase
     [HttpGet("get-by-id")]
     public async Task<ActionResult<BudgetDto>> GetById([FromQuery] int id)
     {
-        var budget = _budgetService.GetById(id);
+        bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+        if (!isValid)
+        {
+            return BadRequest("UserId không hợp lệ");
+        }
+
+        var budget = _budgetService.GetById(id, userId);
         if (budget == null)
         {
             return NotFound();
         }
-        var result = new BudgetDto(budget);
+        var result = _mapper.Map<BudgetDto>(budget);
         return Ok(result);
     }
 }

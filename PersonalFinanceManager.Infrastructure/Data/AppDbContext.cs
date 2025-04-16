@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PersonalFinanceManager.Shared.Data;
 
 namespace PersonalFinanceManager.Infrastructure.Data
 {
-    public class AppDbContext: IdentityDbContext<AppUser>
+    public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -35,6 +36,25 @@ namespace PersonalFinanceManager.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Đặt tên bảng không có tiền tố AspNet
+            modelBuilder.Entity<AppUser>().ToTable("Users");
+            modelBuilder.Entity<IdentityRole<int>>().ToTable("Roles");
+            modelBuilder.Entity<IdentityUserRole<int>>().ToTable("UserRoles");
+            modelBuilder.Entity<IdentityUserClaim<int>>().ToTable("UserClaims");
+            modelBuilder.Entity<IdentityUserLogin<int>>().ToTable("UserLogins");
+            modelBuilder.Entity<IdentityUserToken<int>>().ToTable("UserTokens");
+            modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("RoleClaims");
+
+            modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId);
+
+            modelBuilder.Entity<Budget>()
+                .HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId);
+
             modelBuilder.Entity<RepaymentTransaction>()
             .HasOne(rt => rt.Transaction)
             .WithMany(t => t.RepaymentTransactions)
@@ -56,9 +76,8 @@ namespace PersonalFinanceManager.Infrastructure.Data
                 .HasOne(rt => rt.User)
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId);
-            // Thêm ràng buộc khác nếu cần
 
-            modelBuilder.Entity<RefreshToken>()
+            modelBuilder.Entity<ExternalToken>()
                 .HasOne(rt => rt.User)
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId);

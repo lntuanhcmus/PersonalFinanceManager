@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
 using PersonalFinanceManager.Shared.Enum;
@@ -9,11 +11,11 @@ using PersonalFinanceManager.WebHost.Helper;
 using PersonalFinanceManager.WebHost.Models;
 using System.Globalization;
 using System.Text;
-using System.Text.Json;
 using X.PagedList;
 
 namespace PersonalFinanceManager.WebHost.Controllers
 {
+    [Authorize]
     public class TransactionsManagementController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -42,6 +44,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
             DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
 
+            
             var client = _httpClientFactory.CreateClient("ApiClient");
             var query = $"?transactionId={Uri.EscapeDataString(transactionId ?? "")}" +
                         $"&startDate={(startDateValue.HasValue ? startDateValue.Value.ToString("yyyy-MM-dd") : "")}" +
@@ -54,16 +57,13 @@ namespace PersonalFinanceManager.WebHost.Controllers
                         $"&content={Uri.EscapeDataString(content ?? "")}" +
                         $"&status={status}" +
                         $"&page={page}&pageSize=10";
-            var response = await client.GetAsync($"api/transactionsApi{query}");
+            var response = await client.GetAsync($"api/TransactionsApi{query}");
 
             IPagedList<TransactionDto> pagedTransactions;
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var pagedResponse = JsonSerializer.Deserialize<PagedResponse<TransactionDto>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var pagedResponse = JsonConvert.DeserializeObject<PagedResponse<TransactionDto>>(json);
                 pagedTransactions = new StaticPagedList<TransactionDto>(
                     pagedResponse.Items,
                     pagedResponse.PageNumber,
@@ -178,8 +178,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 var checkDuplicate = await client.GetAsync($"api/transactionsApi/get-by-id?id={model.TransactionId}");
                 if (checkDuplicate.IsSuccessStatusCode)
                 {
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    var existedTransaction = JsonSerializer.Deserialize<Transaction>(await checkDuplicate.Content.ReadAsStringAsync(), options);
+                    var existedTransaction = JsonConvert.DeserializeObject<Transaction>(await checkDuplicate.Content.ReadAsStringAsync());
                     if(existedTransaction != null)
                     {
                         ModelState.AddModelError("TransactionId", "Mã giao dịch đã tồn tại.");
@@ -191,7 +190,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
 
                 var transaction = _mapper.Map<TransactionDto>(model);
 
-                var json = JsonSerializer.Serialize(transaction);
+                var json = JsonConvert.SerializeObject(transaction);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("api/transactionsApi", content);
                 if (response.IsSuccessStatusCode)
@@ -213,8 +212,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var transaction = JsonSerializer.Deserialize<TransactionDto>(json, options);
+                var transaction = JsonConvert.DeserializeObject<TransactionDto>(json);
                 if (transaction != null)
                 {
                     var model = _mapper.Map<DetailTransactionViewModel>(transaction);
@@ -242,7 +240,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             var transactionDto = _mapper.Map<TransactionDto>(model);
 
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var json = JsonSerializer.Serialize(transactionDto);
+            var json = JsonConvert.SerializeObject(transactionDto);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.PutAsync($"api/transactionsApi/{transactionDto.TransactionId}", content);
 
@@ -279,8 +277,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var transaction = JsonSerializer.Deserialize<RepaymentTransactionDto>(json, options);
+                var transaction = JsonConvert.DeserializeObject<RepaymentTransactionDto>(json);
                 if (transaction != null)
                 {
                     return Ok(transaction);
@@ -288,6 +285,72 @@ namespace PersonalFinanceManager.WebHost.Controllers
             }
 
             return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRepaymentTransactionsByTransactionId(string transactionId)
+        {
+            var transaction = new List<RepaymentTransactionDto>();
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.GetAsync($"api/repaymentTransactionApi/?transactionId={transactionId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                transaction = JsonConvert.DeserializeObject<List<RepaymentTransactionDto>>(json);
+            }
+
+            return Ok(transaction);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddRepaymentTransaction([FromBody] RepaymentTransactionDto transactionDto)
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var content = new StringContent(JsonConvert.SerializeObject(transactionDto), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("api/RepaymentTransactionApi/Create", content);
+
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorObj = JsonConvert.DeserializeObject<dynamic>(json);
+                return BadRequest(errorObj?.error?.ToString() ?? "Lỗi khi thêm giao dịch hoàn trả.");
+            }
+
+            return Ok(JsonConvert.DeserializeObject<object>(json));
+        }
+
+        [HttpPost("{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> EditRepaymentTransaction(int id, RepaymentTransactionDto transactionDto)
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var content = new StringContent(JsonConvert.SerializeObject(transactionDto), Encoding.UTF8, "application/json");
+            var response = await client.PutAsync($"api/RepaymentTransactionApi/{id}", content);
+
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorObj = JsonConvert.DeserializeObject<dynamic>(json);
+                return BadRequest(errorObj?.error?.ToString() ?? "Lỗi khi cập nhật giao dịch hoàn trả.");
+            }
+
+            return Ok(JsonConvert.DeserializeObject<object>(json));
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRepaymentTransaction(int id)
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.DeleteAsync($"api/RepaymentTransactionApi/{id}");
+
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorObj = JsonConvert.DeserializeObject<dynamic>(json);
+                return BadRequest(errorObj?.error?.ToString() ?? "Lỗi khi xóa giao dịch hoàn trả.");
+            }
+
+            return Ok(JsonConvert.DeserializeObject<object>(json));
         }
 
         public async Task<IActionResult> RefreshFromGmail()
@@ -305,7 +368,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
         private async Task<List<SelectListItem>>  PopulateTransctionTypes()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var transactionTypesData = await client.GetFromJsonAsync<List<Category>>($"api/transactionsApi/get-transaction-types");
+            var transactionTypesData = await client.GetFromJsonAsync<List<TransactionType>>($"api/transactionsApi/get-transaction-types");
 
             var transactionTypeList = transactionTypesData
             .Select(t => new SelectListItem
