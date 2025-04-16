@@ -5,7 +5,7 @@ namespace PersonalFinanceManager.Shared.Dto
 {
     public class RepaymentTransactionDto
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         public string TransactionId { get; set; }
 

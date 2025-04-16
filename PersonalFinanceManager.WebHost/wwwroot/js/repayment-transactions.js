@@ -106,8 +106,8 @@ RepaymentTransactions.submitEditRepaymentForm = function () {
         data[key] = value;
     });
 
-    fetch(`/TransactionsManagement/EditRepaymentTransaction/${data.Id}`, {
-        method: 'POST',
+    fetch(`/TransactionsManagement/EditRepaymentTransaction`, {
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'

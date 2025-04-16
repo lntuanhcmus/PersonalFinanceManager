@@ -307,7 +307,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var content = new StringContent(JsonConvert.SerializeObject(transactionDto), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("api/RepaymentTransactionApi/Create", content);
+            var response = await client.PostAsync("api/RepaymentTransactionApi", content);
 
             var json = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
@@ -319,13 +319,12 @@ namespace PersonalFinanceManager.WebHost.Controllers
             return Ok(JsonConvert.DeserializeObject<object>(json));
         }
 
-        [HttpPost("{id}")]
-        [AllowAnonymous]
-        public async Task<IActionResult> EditRepaymentTransaction(int id, RepaymentTransactionDto transactionDto)
+        [HttpPut]
+        public async Task<IActionResult> EditRepaymentTransaction([FromBody] RepaymentTransactionDto transactionDto)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var content = new StringContent(JsonConvert.SerializeObject(transactionDto), Encoding.UTF8, "application/json");
-            var response = await client.PutAsync($"api/RepaymentTransactionApi/{id}", content);
+            var response = await client.PutAsync($"api/RepaymentTransactionApi/{transactionDto.Id}", content);
 
             var json = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
@@ -337,7 +336,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             return Ok(JsonConvert.DeserializeObject<object>(json));
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public async Task<IActionResult> DeleteRepaymentTransaction(int id)
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
