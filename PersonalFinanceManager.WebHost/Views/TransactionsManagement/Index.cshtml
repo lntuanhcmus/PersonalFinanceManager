@@ -299,12 +299,14 @@
                 spinner.style.display = 'inline-block';
 
                 try {
-                    const response = await fetch('https://localhost:5000/api/gmail/initiate-oauth', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('jwtToken') // Giả sử dùng JWT
-                        }
+                    const response = await fetch('/TransactionsManagement/InitiateOAuth', {
+                        method: 'GET'
                     });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Lỗi từ server: ${response.status}`);
+                    }
 
                     const result = await response.json();
                     if (result.authUrl) {

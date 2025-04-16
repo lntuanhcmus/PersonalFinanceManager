@@ -364,6 +364,38 @@ namespace PersonalFinanceManager.WebHost.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> InitiateOAuth()
+        {
+            try
+            {
+                // Tạo client HTTP
+                var client = _httpClientFactory.CreateClient("ApiClient");
+
+                // Gửi yêu cầu tới API đích
+                var response = await client.GetAsync("api/gmailApi/initiate-oauth");
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorObj = JsonConvert.DeserializeObject<object>(json);
+                    return BadRequest(new { error = errorObj?.ToString() ?? "Lỗi khi gọi API Gmail" });
+                }
+
+                // Phân tích kết quả từ API
+                return Ok(json);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, new { error = $"Lỗi khi gọi API: {ex.Message}" });
+            }
+            catch (JsonException)
+            {
+                return BadRequest(new { error = "Không thể phân tích phản hồi từ API" });
+            }
+        }
+
         private async Task<List<SelectListItem>>  PopulateTransctionTypes()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");

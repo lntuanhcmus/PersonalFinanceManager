@@ -43,10 +43,10 @@ namespace PersonalFinanceManager.Infrastructure.Services
             });
 
             var authUrl = flow.CreateAuthorizationCodeRequest(redirectUri);
-            return authUrl.Build().ToString() + "&access_type=offline&prompt=consent&state=" + userId.ToString();
+            return authUrl.Build().ToString() + "&prompt=consent&state=" + userId.ToString();
         }
 
-        public async Task<UserCredential> ExchangeCodeForTokenAsync(string userId, string credentialsPath, string code)
+        public async Task<UserCredential> ExchangeCodeForTokenAsync(string userId, string credentialsPath, string code, string redirectUri)
         {
             using (var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read))
             {
@@ -58,8 +58,8 @@ namespace PersonalFinanceManager.Infrastructure.Services
                     // Không cần DataStore ở đây nữa
                 });
 
-                var token = await flow.ExchangeCodeForTokenAsync("user", code, "http://localhost:8000/oauth/callback", CancellationToken.None);
-                var credential = new UserCredential(flow, "user", token);
+                var token = await flow.ExchangeCodeForTokenAsync(userId, code, redirectUri, CancellationToken.None);
+                var credential = new UserCredential(flow, userId, token);
 
                 var service = new GMService.GmailService(new BaseClientService.Initializer
                 {

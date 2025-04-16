@@ -27,7 +27,7 @@ namespace PersonalFinanceManager.Controllers
             _gmailSettings = gmailOptions.Value;
         }
 
-        [HttpGet]
+        [HttpGet("initiate-oauth")]
         public async Task<IActionResult> InitiateOAuth()
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -43,14 +43,13 @@ namespace PersonalFinanceManager.Controllers
 
         [HttpGet("callback")]
         [AllowAnonymous]
-        public async Task<IActionResult> Callback(string code, string state, string error)
+        public async Task<IActionResult> Callback(string code, string state, string? error)
         {
             try
             {
                 if (!string.IsNullOrEmpty(error))
                 {
-                    // Chuyển hướng về MVC với thông báo lỗi
-                    return Redirect($"https://localhost:7204/GmailManagement/callback?error={Uri.EscapeDataString(error)}");
+                    return Redirect($"https://localhost:7204/GmailManagement/callback?error={error}");
                 }
 
                 if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
@@ -61,7 +60,7 @@ namespace PersonalFinanceManager.Controllers
                 try
                 {
                     var redirectUri = "http://localhost:8000/api/gmailApi/callback";
-                    await _gmailService.ExchangeCodeForTokenAsync(code, redirectUri, state);
+                    await _gmailService.ExchangeCodeForTokenAsync(state, _credentialPath,code , redirectUri);
                     // Chuyển hướng về MVC với trạng thái thành công
                     return Redirect("https://localhost:7204/GmailManagement/callback?success=true");
                 }
