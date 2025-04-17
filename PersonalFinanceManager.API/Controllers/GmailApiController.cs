@@ -59,10 +59,15 @@ namespace PersonalFinanceManager.Controllers
 
                 try
                 {
-                    var redirectUri = "http://localhost:8000/api/gmailApi/callback";
-                    await _gmailService.ExchangeCodeForTokenAsync(state, _credentialPath,code , redirectUri);
+                    var redirectUri = "http://localhost:8000/api/GmailApi/callback";
+                    var userCredentital = await _gmailService.ExchangeCodeForTokenAsync(state, _credentialPath,code , redirectUri);
+
+                    var transactions = await _gmailService.ExtractTransactionsAsync(state, userCredentital, 10);
+
+                    await _transactionService.SaveTransactions(transactions, Int16.Parse(state));
                     // Chuyển hướng về MVC với trạng thái thành công
-                    return Redirect("https://localhost:7204/GmailManagement/callback?success=true");
+                    var successMessage = "Connect to Gmail successfully";
+                    return Redirect($"https://localhost:7204?successMessage={successMessage}");
                 }
                 catch (Exception ex)
                 {

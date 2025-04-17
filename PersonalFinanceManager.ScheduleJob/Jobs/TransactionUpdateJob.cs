@@ -165,7 +165,8 @@ public class TransactionUpdateJobDB : BaseJob, IJobConfiguration
             {
                 try
                 {
-                    var transactions = await gmailService.ExtractTransactionsAsync(userId.ToString(), credentialsPath, parameters.MaxResults > 0 ? parameters.MaxResults : 10);
+                    var credential = await gmailService.GetCredentialFromToken(userId.ToString(), credentialsPath);
+                    var transactions = await gmailService.ExtractTransactionsAsync(userId.ToString(), credential, parameters.MaxResults > 0 ? parameters.MaxResults : 10);
 
                     _logger.LogInformation($"UserId: {userId} Đã lấy được {transactions.Count()} giao dịch.");
                     await SaveTransactions(dbContext, transactions);

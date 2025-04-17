@@ -11,6 +11,7 @@ using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PersonalFinanceManager.Infrastructure.Repositories;
 
 namespace PersonalFinanceManager.Infrastructure.Services
 {
@@ -20,13 +21,13 @@ namespace PersonalFinanceManager.Infrastructure.Services
         private static readonly string ApplicationName = "Personal Finance Manager";
         private readonly IExternalTokenService _tokenService;
         private readonly string _provider = "GmailToken";
-        private readonly UserManager<AppUser> _userManager;
+        private readonly IUserRepository _userRepository;
 
 
-        public GmailService(IExternalTokenService tokenService, UserManager<AppUser> userManager)
+        public GmailService(IExternalTokenService tokenService, IUserRepository userRepository)
         {
             _tokenService = tokenService;
-            _userManager = userManager;
+            _userRepository = userRepository;
         }
 
         //Main Action
@@ -70,7 +71,7 @@ namespace PersonalFinanceManager.Infrastructure.Services
                 var userProfile = await service.Users.GetProfile("me").ExecuteAsync();
                 var userEmail = userProfile.EmailAddress;
 
-                var user = await _userManager.FindByIdAsync(userId);
+                var user = await _userRepository.FindByIdAsync(Int16.Parse(userId));
 
                 if(user != null && user.Email == userEmail)
                 {
@@ -101,9 +102,9 @@ namespace PersonalFinanceManager.Infrastructure.Services
             }
         }
 
-        public async Task<List<Transaction>> ExtractTransactionsAsync(string userId, string credentialsPath, int maxResult = 10)
+        public async Task<UserCredential> GetCredentialFromToken(string userId, string credentialsPath)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userRepository.FindByIdAsync(int.Parse(userId));
             if (user == null)
                 throw new Exception("Không tìm thấy người dùng");
 
@@ -113,6 +114,11 @@ namespace PersonalFinanceManager.Infrastructure.Services
 
             var credential = await GetCredentialAsync(credentialsPath, token.ToTokenResponse(), userId);
 
+            return credential;
+        }
+
+        public async Task<List<Transaction>> ExtractTransactionsAsync(string userId, UserCredential credential, int maxResult = 10)
+        {
             var service = new GMService.GmailService(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
@@ -121,7 +127,7 @@ namespace PersonalFinanceManager.Infrastructure.Services
 
             var messages = await GetMessagesAsync(service, maxResult);
 
-            var transactions = await ExtractTransactionsFromMessagesAsync(service, messages, user.Id);
+            var transactions = await ExtractTransactionsFromMessagesAsync(service, messages, int.Parse(userId));
 
             return transactions;
         }
@@ -250,57 +256,5 @@ namespace PersonalFinanceManager.Infrastructure.Services
         {
             return token.ExpiresInSeconds.HasValue && DateTime.UtcNow >= token.IssuedUtc.AddSeconds(token.ExpiresInSeconds.Value);
         }
-
-        // Xác thực thủ công và lưu token
-        private async Task<UserCredential> AuthorizeManually(GoogleAuthorizationCodeFlow flow)
-        {
-            var authUrl = flow.CreateAuthorizationCodeRequest("http://localhost:8000/oauth/callback");
-            var baseUrl = authUrl.Build().ToString();
-
-            // Kiểm tra kỹ: không nên nối thêm nếu baseUrl đã chứa access_type
-            // Nếu không chắc, bạn có thể dùng URI builder để xử lý an toàn hơn
-            string finalUrl = baseUrl.Contains("access_type=")
-                ? baseUrl
-                : baseUrl + "&access_type=offline";
-
-            finalUrl = finalUrl.Contains("&prompt=") ? finalUrl : finalUrl + "&prompt=consent";
-
-            Console.WriteLine("Mở URL sau để cấp quyền:");
-            Console.WriteLine(finalUrl);
-            // Nhập mã xác thực từ trình duyệt
-            Console.Write("Nhập mã xác thực: ");
-            string code = Console.ReadLine();
-
-            // Đổi mã xác thực lấy token
-            var token = await flow.ExchangeCodeForTokenAsync(
-                "user",
-                code,
-                "http://localhost:8000/oauth/callback", // Phải giống tuyệt đối
-                CancellationToken.None
-            );
-
-            // Lưu token
-
-            var newToken = token.ToExternalToken(_provider);
-            await _tokenService.SaveTokenAsync(newToken);
-
-            // Trả về thông tin xác thực
-            return new UserCredential(flow, "user", token);
-        }
-
-        //// Hàm yêu cầu xác thực lại
-        //private async Task<UserCredential> ReauthorizeUser(GoogleAuthorizationCodeFlow flow)
-        //{
-        //    var authUrl = flow.CreateAuthorizationCodeRequest("http://localhost:8000/oauth/callback").Build();
-        //    Console.WriteLine("Mở URL sau để cấp quyền:");
-        //    Console.WriteLine(authUrl.ToString());
-        //    Console.WriteLine("Nhập code từ trình duyệt:");
-        //    Console.Write("Code: ");
-        //    string code = Console.ReadLine();
-
-        //    var token = await flow.ExchangeCodeForTokenAsync("user", code, "http://localhost:8000/oauth/callback", CancellationToken.None);
-        //    File.WriteAllText("token.json", JsonSerializer.Serialize(token));
-        //    return new UserCredential(flow, "user", token);
-        //}
     }
 }

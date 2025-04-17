@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using PersonalFinanceManager.API.Model;
 using PersonalFinanceManager.API.Services;
 using PersonalFinanceManager.Infrastructure.Data;
+using PersonalFinanceManager.Infrastructure.Repositories;
 using PersonalFinanceManager.Infrastructure.Services;
 using PersonalFinanceManager.Shared.Data;
 using System.Text;
@@ -41,6 +42,7 @@ namespace PersonalFinanceManager.API.Extensions
             services.AddScoped<BudgetService>();
             services.AddScoped<RepaymentTransactionService>();
             services.AddScoped<IUserTokenService, UserTokenService>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }

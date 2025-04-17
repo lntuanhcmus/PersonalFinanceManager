@@ -260,19 +260,19 @@ namespace PersonalFinanceManager.API.Services
             }
         }
 
-        public async Task SaveTransactions(List<Transaction> transactions, int? userId = null)
+        public async Task SaveTransactions(List<Transaction> transactions, int userId)
         {
             var existingIds = _context.Transactions.Select(t => t.TransactionId).ToList();
             var newTransactions = transactions.Where(t => !existingIds.Contains(t.TransactionId)).ToList();
             if(newTransactions.Any())
             {
-                newTransactions = await ClassifyTransactionsAsync(newTransactions);
+                newTransactions = await ClassifyTransactionsAsync(newTransactions, userId);
             }
             _context.Transactions.AddRange(newTransactions);
             await _context.SaveChangesAsync();
         }
 
-        private async Task<List<Transaction>> ClassifyTransactionsAsync(List<Transaction> transactions)
+        private async Task<List<Transaction>> ClassifyTransactionsAsync(List<Transaction> transactions, int userId)
         {
 
             // Lấy toàn bộ LabelingRules từ DB
@@ -303,6 +303,8 @@ namespace PersonalFinanceManager.API.Services
                     tx.CategoryId = defaultCategory.Id;
                 }
                 tx.Status = tx.TransactionTypeId == (int)TransactionTypeEnum.Advance ? tx.Status = (int)TransactionStatusEnum.Pending : tx.Status = (int)TransactionStatusEnum.Success;
+
+                tx.UserId = userId;
             }
 
             return transactions;

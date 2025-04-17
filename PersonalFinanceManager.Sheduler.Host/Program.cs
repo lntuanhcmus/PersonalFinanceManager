@@ -9,6 +9,7 @@ using PersonalFinanceManager.Infrastructure.Data;
 
 using Serilog;
 using PersonalFinanceManager.Infrastructure.Services;
+using PersonalFinanceManager.Infrastructure.Repositories;
 
 namespace PersonalFinanceManager.Scheduler.Host
 {
@@ -62,6 +63,7 @@ namespace PersonalFinanceManager.Scheduler.Host
 
                     services.AddScoped<IGmailService, GmailService>();
                     services.AddScoped<IExternalTokenService, ExternalTokenService>();
+                    services.AddScoped<IUserRepository, UserRepository>();
                     services.AddHttpClient();
                     services.AddSingleton<SchedulerService>();
                     services.AddTransient<TransactionUpdateJobDB>();

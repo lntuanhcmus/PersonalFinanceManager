@@ -91,23 +91,23 @@ namespace PersonalFinanceManager.Controllers
         }
 
 
-        [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshFromGmail()
-        {
-            bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
-            if (!isValid)
-            {
-                return BadRequest("UserId không hợp lệ");
-            }
-            int maxResult = _gmailSettings.MaxResult;
+        //[HttpPost("refresh")]
+        //public async Task<IActionResult> RefreshFromGmail()
+        //{
+        //    bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
+        //    if (!isValid)
+        //    {
+        //        return BadRequest("UserId không hợp lệ");
+        //    }
+        //    int maxResult = _gmailSettings.MaxResult;
 
-            // Kiểm tra hợp lệ, nếu không dùng mặc định
-            if (maxResult <= 0) maxResult = 10;
+        //    // Kiểm tra hợp lệ, nếu không dùng mặc định
+        //    if (maxResult <= 0) maxResult = 10;
 
-            var transactions = await _gmailService.ExtractTransactionsAsync(userId.ToString(), "credentials.json", maxResult);
-            await _transactionService.SaveTransactions(transactions, userId);
-            return Ok();
-        }
+        //    var transactions = await _gmailService.ExtractTransactionsAsync(userId.ToString(), "credentials.json", maxResult);
+        //    await _transactionService.SaveTransactions(transactions, userId);
+        //    return Ok();
+        //}
 
         [HttpPost]
         public async Task<IActionResult> AddTransaction([FromBody] TransactionDto transactionDto)

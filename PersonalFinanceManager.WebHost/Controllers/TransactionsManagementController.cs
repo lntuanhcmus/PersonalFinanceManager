@@ -108,8 +108,18 @@ namespace PersonalFinanceManager.WebHost.Controllers
             string sourceAccount = null,
             string content = null,
             int? status = null,
-            int page = 1)
+            int page = 1,
+            string? successMessage = null,
+            string? errorMessage = null)
         {
+            if(!string.IsNullOrEmpty(successMessage))
+            {
+                TempData["Success"] = successMessage;
+            }
+            if(!string.IsNullOrEmpty(errorMessage))
+            {
+                TempData["Error"] = errorMessage;
+            }
             DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
             DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
 
