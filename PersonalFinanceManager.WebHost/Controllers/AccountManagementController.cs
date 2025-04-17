@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PersonalFinanceManager.Shared.Dto;
 using System.Text;
-using System.Text.Json;
-
+using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
 namespace PersonalFinanceManager.WebHost.Controllers
 {
     public class AccountManagementController : Controller
@@ -34,7 +34,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
 
             var client = _httpClientFactory.CreateClient("ApiClient");
             var content = new StringContent(
-                JsonSerializer.Serialize(model),
+                JsonConvert.SerializeObject(model),
                 Encoding.UTF8,
                 "application/json");
 
@@ -67,17 +67,14 @@ namespace PersonalFinanceManager.WebHost.Controllers
 
             var client = _httpClientFactory.CreateClient("ApiClient");
             var content = new StringContent(
-                JsonSerializer.Serialize(model),
+                JsonConvert.SerializeObject(model),
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await client.PostAsync("api/accountApi/login", content);
+            var response = await client.PostAsync("api/AccountApi/login", content);
             if (response.IsSuccessStatusCode)
             {
-                var token = JsonSerializer.Deserialize<TokenDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var token = JsonConvert.DeserializeObject<TokenDto>(await response.Content.ReadAsStringAsync());
                 if (token != null)
                 {
                     // Lưu access token và refresh token vào cookie
@@ -115,6 +112,52 @@ namespace PersonalFinanceManager.WebHost.Controllers
             Response.Cookies.Delete("RefreshToken");
             TempData["SuccessMessage"] = "Logged out successfully.";
             return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Info()
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+
+            var response = await client.GetAsync("api/accountApi/info");
+            if (response.IsSuccessStatusCode)
+            {
+                var userInfo = JsonConvert.DeserializeObject<UserInfoDto>(await response.Content.ReadAsStringAsync());
+                return View(userInfo);
+            }
+            return View();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> InitiateOAuth()
+        {
+            try
+            {
+                // Tạo client HTTP
+                var client = _httpClientFactory.CreateClient("ApiClient");
+
+                // Gửi yêu cầu tới API đích
+                var response = await client.GetAsync("api/gmailApi/initiate-oauth");
+                var json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorObj = JsonConvert.DeserializeObject<object>(json);
+                    return BadRequest(new { error = errorObj?.ToString() ?? "Lỗi khi gọi API Gmail" });
+                }
+
+                // Phân tích kết quả từ API
+                return Ok(json);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, new { error = $"Lỗi khi gọi API: {ex.Message}" });
+            }
+            catch (JsonException)
+            {
+                return BadRequest(new { error = "Không thể phân tích phản hồi từ API" });
+            }
         }
     }
 }

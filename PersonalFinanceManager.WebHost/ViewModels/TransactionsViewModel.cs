@@ -43,6 +43,9 @@ namespace PersonalFinanceManager.WebHost.Models
         [JsonPropertyName("transactionTypeId")]
         public int? TransactionTypeId { get; set; }
 
+        [JsonPropertyName("totalTransactionAmout")]
+        public decimal TotalTransactionAmout { get; set; }
+
         [JsonPropertyName("categories")]
         public List<SelectListItem> Categories { get; set; }
 

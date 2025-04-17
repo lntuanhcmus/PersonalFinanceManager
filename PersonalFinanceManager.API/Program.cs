@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using PersonalFinanceManager.API.Extensions;
 using PersonalFinanceManager.API.Model;
 using System.Globalization;
@@ -18,6 +19,8 @@ builder.Services
     .AddAppServices(builder.Configuration)
     .AddCorsPolicy()
     .AddJwtAuthentication(builder.Configuration);
+
+
 
 var app = builder.Build();
 

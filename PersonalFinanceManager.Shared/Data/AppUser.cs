@@ -35,5 +35,7 @@ namespace PersonalFinanceManager.Shared.Data
 
         [DataType(DataType.DateTime)]
         public DateTime? UpdatedAt { get; set; }
+
+        public bool IsConnectedGmail { get; set; } = false;
     }
 }

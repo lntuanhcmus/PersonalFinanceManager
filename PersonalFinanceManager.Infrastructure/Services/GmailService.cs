@@ -92,6 +92,9 @@ namespace PersonalFinanceManager.Infrastructure.Services
                         UserId = user.Id,
                     };
                     await _tokenService.SaveTokenAsync(externalToken);
+
+                    user.IsConnectedGmail = true;
+                    await _userRepository.SaveChangeAsync(user);
                 }
                 else
                 {

@@ -91,24 +91,6 @@ namespace PersonalFinanceManager.Controllers
         }
 
 
-        //[HttpPost("refresh")]
-        //public async Task<IActionResult> RefreshFromGmail()
-        //{
-        //    bool isValid = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId);
-        //    if (!isValid)
-        //    {
-        //        return BadRequest("UserId không hợp lệ");
-        //    }
-        //    int maxResult = _gmailSettings.MaxResult;
-
-        //    // Kiểm tra hợp lệ, nếu không dùng mặc định
-        //    if (maxResult <= 0) maxResult = 10;
-
-        //    var transactions = await _gmailService.ExtractTransactionsAsync(userId.ToString(), "credentials.json", maxResult);
-        //    await _transactionService.SaveTransactions(transactions, userId);
-        //    return Ok();
-        //}
-
         [HttpPost]
         public async Task<IActionResult> AddTransaction([FromBody] TransactionDto transactionDto)
         {
@@ -184,7 +166,7 @@ namespace PersonalFinanceManager.Controllers
 
         [HttpGet("export")]
         public async Task<IActionResult> ExportTransactions(
-            string transactionId,
+            string transactionId = null,
             DateTime? startDate = null,
             DateTime? endDate = null,
             decimal? minAmount = null,
@@ -209,6 +191,26 @@ namespace PersonalFinanceManager.Controllers
                 return BadRequest("userId is invalid");
             }
             
+        }
+
+        [HttpGet("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userCredential = await _gmailService.GetCredentialFromToken(userId, "credentials.json");
+
+                var transactions = await _gmailService.ExtractTransactionsAsync(userId, userCredential, 10);
+
+                await _transactionService.SaveTransactions(transactions, int.Parse(userId));
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
         }
 
     }

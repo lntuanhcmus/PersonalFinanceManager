@@ -1,0 +1,103 @@
+﻿/* Tùy chỉnh form chỉnh sửa giao dịch */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.form-control, .select2-container--bootstrap-5 .select2-selection--single {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+    .form-control:focus, .select2-container--bootstrap-5.select2-container--focus .select2-selection--single {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+/* Đồng bộ Select2 với form-control */
+.select2-container--bootstrap-5 .select2-selection--single {
+    height: calc(3.5rem + 2px); /* Khớp với form-floating */
+    padding: 1rem 0.75rem 0.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5;
+        color: #495057;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+        height: calc(3.5rem + 2px);
+        right: 0.75rem;
+    }
+
+.select2-container--bootstrap-5 .select2-dropdown {
+    font-size: 1rem;
+    border-radius: 0.5rem;
+}
+
+/* Tùy chỉnh nhãn nổi */
+.form-floating > .form-control,
+.form-floating > .form-control-plaintext {
+    padding: 1rem 0.75rem;
+}
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        opacity: 0.65;
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+
+/* Tùy chỉnh nút */
+.btn-primary, .btn-secondary {
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .btn-primary:hover, .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+/* Tùy chỉnh alert */
+.alert-danger {
+    border-radius: 0.5rem;
+    background-color: #f8d7da;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tùy chỉnh modal */
+.modal-content {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+.modal-header.bg-primary {
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+}
+
+.modal-footer {
+    border-top: none;
+    padding: 1rem 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-floating > label {
+        font-size: 0.9rem;
+    }
+}

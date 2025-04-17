@@ -9,13 +9,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="~/PersonalFinanceManager.WebHost.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/navbar.css" asp-append-version="true" />
 </head>
 <body>
     <header>
         @await Html.PartialAsync("_Navbar")
     </header>
     <div class="container">
-        <main role="main" class="pb-3" style="padding-top: 70px;">
+        <main role="main" class="pb-3" style="padding-top: 100px;">
             @RenderBody()
         </main>
     </div>

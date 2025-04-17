@@ -51,6 +51,7 @@ namespace PersonalFinanceManager.API.Services
 
             // Lấy tổng số phần tử trước phân trang
             var totalItems = await query.CountAsync();
+            var totalAmount = query.Sum(x => (x.Amount-x.RepaymentAmount));
 
             query = query
                .OrderByDescending(t => t.TransactionTime);
@@ -73,7 +74,8 @@ namespace PersonalFinanceManager.API.Services
                 Items = pagedItems,
                 TotalItems = totalItems,
                 PageNumber = page ?? 0,
-                PageSize = pageSize ?? 0
+                PageSize = pageSize ?? 0,
+                TotalAmount = totalAmount
             };
         }
 

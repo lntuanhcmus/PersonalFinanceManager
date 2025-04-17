@@ -1,210 +1,258 @@
 ﻿@model PersonalFinanceManager.WebHost.Models.DetailTransactionViewModel
 
-<div class="row mb-3">
-    <div class="col">
-        <h2 class="text-primary">Sửa giao dịch</h2>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary fw-bold animate__animated animate__fadeIn">Sửa giao dịch</h2>
+        </div>
     </div>
-</div>
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-        {
-            <p>@error.ErrorMessage</p>
-        }
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <p class="mb-0">@error.ErrorMessage</p>
+            }
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-<div class="card">
-    <div class="card-body">
-        <form asp-action="EditTransaction" method="post" class="needs-validation" novalidate>
-            <input type="hidden" asp-for="TransactionId" />
-            <div class="mb-3">
-                <label asp-for="TransactionTime" class="form-label">Ngày giao dịch</label>
-                <div class="input-group">
-                    <input asp-for="TransactionTime" class="form-control datetimepicker" required />
-                    <span class="input-group-text">
-                        <i class="bi bi-calendar"></i>
-                    </span>
+    <div class="card shadow-sm rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="EditTransaction" method="post" class="needs-validation" novalidate>
+                <input type="hidden" asp-for="TransactionId" />
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="TransactionTime" class="form-control datetimepicker" required id="transactionTime" placeholder="Ngày giao dịch" />
+                            <label for="transactionTime">Ngày giao dịch</label>
+                            <div class="invalid-feedback">Vui lòng chọn ngày giao dịch.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="Amount" class="form-control" required type="number" step="1" id="amount" placeholder="Số tiền (VND)" />
+                            <label for="amount">Số tiền (VND)</label>
+                            <div class="invalid-feedback">Vui lòng nhập số tiền (chỉ nhập số, không cần VND).</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label for="transactionTypeId" class="form-label fw-medium">Loại giao dịch</label>
+                            <select asp-for="TransactionTypeId" asp-items="Model.TransactionTypes" class="form-control select2" id="transactionTypeId">
+                                <option value="">-- Chọn loại giao dịch --</option>
+                            </select>
+                            <div class="invalid-feedback">Vui lòng chọn loại giao dịch.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label for="categoryId" class="form-label fw-medium">Danh mục</label>
+                            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control select2" id="categoryId">
+                                <option value="">-- Chọn danh mục --</option>
+                            </select>
+                            <div class="invalid-feedback">Vui lòng chọn danh mục.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="SourceAccount" class="form-control" id="sourceAccount" placeholder="Người gửi/Tài khoản nguồn" />
+                            <label for="sourceAccount">Người gửi/Tài khoản nguồn</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="RecipientAccount" class="form-control" id="recipientAccount" placeholder="Tài khoản người hưởng" />
+                            <label for="recipientAccount">Tài khoản người hưởng</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="RecipientName" class="form-control" id="recipientName" placeholder="Tên người hưởng" />
+                            <label for="recipientName">Tên người hưởng</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="RecipientBank" class="form-control" id="recipientBank" placeholder="Tên ngân hàng hưởng" />
+                            <label for="recipientBank">Tên ngân hàng hưởng</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="Description" class="form-control" id="description" placeholder="Nội dung" />
+                            <label for="description">Nội dung</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label for="status" class="form-label fw-medium">Trạng thái</label>
+                            <select asp-for="Status" asp-items="Model.Statuses" class="form-control select2" id="status">
+                                <option value="">-- Chọn trạng thái --</option>
+                            </select>
+                            <div class="invalid-feedback">Vui lòng chọn trạng thái.</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="invalid-feedback">Vui lòng chọn ngày giao dịch.</div>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Amount" class="form-label">Số tiền (VND)</label>
-                <input asp-for="Amount" class="form-control" required type="number" step="1" placeholder="VD: 500000" />
-                <div class="invalid-feedback">Vui lòng nhập số tiền (chỉ nhập số, không cần VND).</div>
-            </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary shadow-sm px-4">Lưu thay đổi</button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary shadow-sm px-4">Hủy</a>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label">Loại giao dịch</label>
-                <select asp-for="TransactionTypeId"
-                        asp-items="Model.TransactionTypes"
-                        class="form-control">
-                    <option value="">-- Chọn loại giao dịch --</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Danh mục</label>
-                <select asp-for="CategoryId"
-                        asp-items="Model.Categories"
-                        class="form-control">
-                    <option value="">-- Chọn danh mục --</option>
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label asp-for="SourceAccount" class="form-label">Người gửi/Tài khoản nguồn</label>
-                <input asp-for="SourceAccount" class="form-control" placeholder="VD: Nguyen Van A" />
-            </div>
-            <div class="mb-3">
-                <label asp-for="RecipientAccount" class="form-label">Tài khoản người hưởng</label>
-                <input asp-for="RecipientAccount" class="form-control" placeholder="VD: Your VCB Account" />
-            </div>
-            <div class="mb-3">
-                <label asp-for="RecipientName" class="form-label">Tên người hưởng</label>
-                <input asp-for="RecipientName" class="form-control" placeholder="VD: You" />
-            </div>
-            <div class="mb-3">
-                <label asp-for="RecipientBank" class="form-label">Tên ngân hàng hưởng</label>
-                <input asp-for="RecipientBank" class="form-control" placeholder="VD: Vietcombank" />
-            </div>
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label">Nội dung</label>
-                <input asp-for="Description" class="form-control" placeholder="VD: Lương tháng 4" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Trạng thái</label>
-                <select asp-for="Status"
-                        asp-items="Model.Statuses"
-                        class="form-control">
-                    <option value="">-- Chọn trạng thái --</option>
-                </select>
-            </div>
-
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
-            </div>
-
-
-
-            @* Hidden Field*@
-            <input asp-for="Categories" hidden />
-            <input asp-for="TransactionTypeId" hidden />
-            <input asp-for="TransactionTypeName" hidden />
-            <input asp-for="CategoryName" hidden />
-        </form>
+                <!-- Hidden Fields -->
+                <input asp-for="Categories" hidden />
+                <input asp-for="TransactionTypeId" hidden />
+                <input asp-for="TransactionTypeName" hidden />
+                <input asp-for="CategoryName" hidden />
+            </form>
+        </div>
     </div>
-</div>
 
-<!-- Render the Repayment Transactions Table -->
-@await Html.PartialAsync("_RepaymentTransactionsTable", Model)
+    <!-- Render the Repayment Transactions Table -->
+    <div class="mt-4">
+        @await Html.PartialAsync("_RepaymentTransactionsTable", Model)
+    </div>
 
-<!-- Modal for Adding Repayment Transaction -->
-<div class="modal fade" id="addRepaymentModal" tabindex="-1" aria-labelledby="addRepaymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addRepaymentModalLabel">Thêm giao dịch hoàn trả</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addRepaymentForm" class="needs-validation" novalidate>
-                    <input type="hidden" name="TransactionId" value="@Model.TransactionId" />
-                    <div class="mb-3">
-                        <label for="transactionTime" class="form-label">Thời gian giao dịch</label>
-                        <div class="input-group">
-                            <input id="transactionTime" name="TransactionTime" class="form-control datetimepicker-modal" required />
-                            <span class="input-group-text">
-                                <i class="bi bi-calendar"></i>
-                            </span>
+    <!-- Modal for Adding Repayment Transaction -->
+    <div class="modal fade" id="addRepaymentModal" tabindex="-1" aria-labelledby="addRepaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-3 shadow-lg animate__animated animate__fadeInUp">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addRepaymentModalLabel">Thêm giao dịch hoàn trả</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addRepaymentForm" class="needs-validation" novalidate>
+                        <input type="hidden" name="TransactionId" value="@Model.TransactionId" />
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="transactionTime" name="TransactionTime" class="form-control datetimepicker-modal" required placeholder="Thời gian giao dịch" />
+                                    <label for="transactionTime">Thời gian giao dịch</label>
+                                    <div class="invalid-feedback">Vui lòng chọn thời gian giao dịch.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="amount" name="Amount" class="form-control" type="number" step="1" required placeholder="Số tiền (VND)" />
+                                    <label for="amount">Số tiền (VND)</label>
+                                    <div class="invalid-feedback">Vui lòng nhập số tiền.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="senderName" name="SenderName" class="form-control" placeholder="Người gửi" />
+                                    <label for="senderName">Người gửi</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="description" name="Description" class="form-control" placeholder="Nội dung" />
+                                    <label for="description">Nội dung</label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="invalid-feedback">Vui lòng chọn thời gian giao dịch.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Số tiền (VND)</label>
-                        <input id="amount" name="Amount" class="form-control" type="number" step="1" required placeholder="VD: 500000" />
-                        <div class="invalid-feedback">Vui lòng nhập số tiền.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="senderName" class="form-label">Người gửi</label>
-                        <input id="senderName" name="SenderName" class="form-control" placeholder="VD: Nguyen Van A" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Nội dung</label>
-                        <input id="description" name="Description" class="form-control" placeholder="VD: Hoàn trả tháng 4" />
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary shadow-sm" onclick="RepaymentTransactions.submitRepaymentForm()">Lưu</button>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" onclick="RepaymentTransactions.submitRepaymentForm()">Lưu</button>
+        </div>
+    </div>
+
+    <!-- Modal for Editing Repayment Transaction -->
+    <div class="modal fade" id="editRepaymentModal" tabindex="-1" aria-labelledby="editRepaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-3 shadow-lg animate__animated animate__fadeInUp">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editRepaymentModalLabel">Sửa giao dịch hoàn trả</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editRepaymentForm" class="needs-validation" novalidate>
+                        <input type="hidden" id="editId" name="Id" />
+                        <input type="hidden" name="TransactionId" value="@Model.TransactionId" />
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="editTransactionTime" name="TransactionTime" class="form-control datetimepicker-modal" required placeholder="Thời gian giao dịch" />
+                                    <label for="editTransactionTime">Thời gian giao dịch</label>
+                                    <div class="invalid-feedback">Vui lòng chọn thời gian giao dịch.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="editAmount" name="Amount" class="form-control" type="number" step="1" required placeholder="Số tiền (VND)" />
+                                    <label for="editAmount">Số tiền (VND)</label>
+                                    <div class="invalid-feedback">Vui lòng nhập số tiền.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="editSenderName" name="SenderName" class="form-control" placeholder="Người gửi" />
+                                    <label for="editSenderName">Người gửi</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-4">
+                                    <input id="editDescription" name="Description" class="form-control" placeholder="Nội dung" />
+                                    <label for="editDescription">Nội dung</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary shadow-sm" onclick="RepaymentTransactions.submitEditRepaymentForm()">Lưu</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- New Edit Modal -->
-<div class="modal fade" id="editRepaymentModal" tabindex="-1" aria-labelledby="editRepaymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editRepaymentModalLabel">Sửa giao dịch hoàn trả</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editRepaymentForm" class="needs-validation" novalidate>
-                    <input type="hidden" id="editId" name="Id" />
-                    <input type="hidden" name="TransactionId" value="@Model.TransactionId" />
-                    <div class="mb-3">
-                        <label for="editTransactionTime" class="form-label">Thời gian giao dịch</label>
-                        <div class="input-group">
-                            <input id="editTransactionTime" name="TransactionTime" class="form-control datetimepicker-modal" required />
-                            <span class="input-group-text">
-                                <i class="bi bi-calendar"></i>
-                            </span>
-                        </div>
-                        <div class="invalid-feedback">Vui lòng chọn thời gian giao dịch.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editAmount" class="form-label">Số tiền (VND)</label>
-                        <input id="editAmount" name="Amount" class="form-control" type="number" step="1" required placeholder="VD: 500000" />
-                        <div class="invalid-feedback">Vui lòng nhập số tiền.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editSenderName" class="form-label">Người gửi</label>
-                        <input id="editSenderName" name="SenderName" class="form-control" placeholder="VD: Nguyen Van A" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="editDescription" class="form-label">Nội dung</label>
-                        <input id="editDescription" name="Description" class="form-control" placeholder="VD: Hoàn trả tháng 4" />
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" onclick="RepaymentTransactions.submitEditRepaymentForm()">Lưu</button>
-            </div>
-        </div>
-    </div>
-</div>
 @section Scripts {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" integrity="sha512-z/90a5SWiu4MWVelb5+ny7sAayYUfMmdXKEAbpj27PfdkamNdyI3hcjxPxkOPbrXoKIm7r9V2mElt5f1OtVhqA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="~/css/edit-transaction.css" asp-append-version="true" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="~/js/utilities.js"></script>
     <script src="~/js/repayment-transactions.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Khởi tạo tiện ích
+            // Khởi tạo Flatpickr
             Utilities.initializeFlatpickr();
+
+            // Khởi tạo Select2
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Chọn --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Khởi tạo validation
             Utilities.initializeFormValidation();
 
             // Tải bảng giao dịch hoàn trả
             const transactionId = '@Model.TransactionId';
             RepaymentTransactions.fetchRepaymentTransactions(transactionId);
-        })
+
+            // Đảm bảo modal không bị giữ trạng thái khi đóng
+            $('#addRepaymentModal, #editRepaymentModal').on('hidden.bs.modal', function () {
+                $(this).find('form').trigger('reset');
+                $(this).find('.is-invalid').removeClass('is-invalid');
+            });
+        });
     </script>
 }

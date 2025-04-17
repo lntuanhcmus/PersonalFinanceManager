@@ -1,0 +1,89 @@
+﻿/* Custom Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Inter', sans-serif;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.btn {
+    transition: all 0.2s ease;
+}
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+    .table th {
+        background-color: #343a40;
+        color: white;
+        font-weight: 600;
+    }
+
+    .table tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f1f3f5;
+    }
+
+.badge {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    box-shadow: none;
+    transition: border-color 0.2s ease;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+.page-link {
+    border-radius: 8px;
+    margin: 0 4px;
+    transition: all 0.2s ease;
+}
+
+    .page-link:hover {
+        background-color: #007bff;
+        color: white;
+        transform: scale(1.1);
+    }
+
+.export-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+}
+

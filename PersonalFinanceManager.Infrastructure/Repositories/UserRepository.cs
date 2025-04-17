@@ -22,5 +22,11 @@ namespace PersonalFinanceManager.Infrastructure.Repositories
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
+
+        public async Task SaveChangeAsync(AppUser user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
     }
 }

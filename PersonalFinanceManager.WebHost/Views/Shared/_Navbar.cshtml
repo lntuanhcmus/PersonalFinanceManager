@@ -1,9 +1,8 @@
-﻿@* _Navbar.cshtml *@
-<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+﻿<nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
         <!-- Bên trái: Icon và tên ứng dụng -->
-        <a class="navbar-brand d-flex align-items-center" href="#">
-            <i class="fas fa-wallet me-2"></i> <!-- Icon ví tiền -->
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-wallet"></i>
             Quản Lý Tài Chính Cá Nhân
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -12,7 +11,7 @@
         </button>
         <!-- Bên phải: Menu -->
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item">
                     <a class="nav-link" asp-controller="DashboardManagement" asp-action="Index">Tổng quan</a>
                 </li>
@@ -24,8 +23,34 @@
                 </li>
                 @if (User.Identity.IsAuthenticated)
                 {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="AccountManagement" asp-action="Logout">Đăng xuất</a>
+                    <!-- Dropdown cho avatar -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="avatar">
+                                @if (!string.IsNullOrEmpty(User.FindFirst("AvatarUrl")?.Value))
+                                {
+                                    <img src="@User.FindFirst("AvatarUrl")?.Value" alt="Avatar" class="avatar-img" />
+                                }
+                                else
+                                {
+                                    <!-- Hiển thị ký tự đầu của tên người dùng -->
+                                    <span>@(User.FindFirst("Name")?.Value.FirstOrDefault().ToString().ToUpper() ?? "U")</span>
+                                }
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" asp-controller="AccountManagement" asp-action="Info">
+                                    <i class="fas fa-user"></i> Tài khoản
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-controller="AccountManagement" asp-action="Logout">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 }
                 else

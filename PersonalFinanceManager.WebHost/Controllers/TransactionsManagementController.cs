@@ -60,6 +60,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             var response = await client.GetAsync($"api/TransactionsApi{query}");
 
             IPagedList<TransactionDto> pagedTransactions;
+            decimal TotalAmount = 0;
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
@@ -69,6 +70,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                     pagedResponse.PageNumber,
                     pagedResponse.PageSize,
                     pagedResponse.TotalItems);
+                TotalAmount = pagedResponse.TotalAmount ?? 0;
             }
             else
             {
@@ -88,6 +90,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 SourceAccount = sourceAccount,
                 Content = content,
                 Status = status,
+                TotalTransactionAmout = TotalAmount,
                 Categories = await PopulateCategories(),
                 TransactionTypes = await PopulateTransctionTypes(),
                 Statuses = await PopulateStatuses(),
@@ -97,6 +100,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> Export(
             string transactionId = null,
             string startDate = null,
@@ -107,19 +111,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
             int? transactionTypeId = null,
             string sourceAccount = null,
             string content = null,
-            int? status = null,
-            int page = 1,
-            string? successMessage = null,
-            string? errorMessage = null)
+            int? status = null)
         {
-            if(!string.IsNullOrEmpty(successMessage))
-            {
-                TempData["Success"] = successMessage;
-            }
-            if(!string.IsNullOrEmpty(errorMessage))
-            {
-                TempData["Error"] = errorMessage;
-            }
             DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
             DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
 
@@ -362,10 +355,11 @@ namespace PersonalFinanceManager.WebHost.Controllers
             return Ok(JsonConvert.DeserializeObject<object>(json));
         }
 
+        [HttpGet]
         public async Task<IActionResult> RefreshFromGmail()
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var response = await client.PostAsync("api/transactionsApi/refresh", null);
+            var response = await client.GetAsync("api/transactionsApi/refresh");
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Index");

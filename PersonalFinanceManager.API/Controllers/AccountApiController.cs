@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using PersonalFinanceManager.Infrastructure.Repositories;
 using PersonalFinanceManager.Infrastructure.Services;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
@@ -16,17 +19,20 @@ namespace PersonalFinanceManager.API.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IUserTokenService _userTokenService;
         private readonly IExternalTokenService _externalTokenService;
+        private readonly IUserRepository _userRepository;
 
         public AccountApiController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             IUserTokenService userTokenService,
-            IExternalTokenService externalTokenService)
+            IExternalTokenService externalTokenService,
+            IUserRepository userRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _userTokenService = userTokenService;
             _externalTokenService = externalTokenService;
+
         }
 
         [HttpPost("register")]
@@ -64,12 +70,15 @@ namespace PersonalFinanceManager.API.Controllers
             if (user == null || !user.IsActive)
                 return Unauthorized("Invalid email or account is inactive.");
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+            // Sử dụng SignInManager để đăng nhập
+            var result = await _signInManager.PasswordSignInAsync(user.UserName ?? user.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
+                // Cập nhật LastLogin
                 user.LastLogin = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
 
+                // Tạo token JWT
                 var token = await _userTokenService.GenerateTokenAsync(user);
                 return Ok(token);
             }
@@ -98,6 +107,27 @@ namespace PersonalFinanceManager.API.Controllers
             return Ok(newToken);
         }
 
-       
+        [HttpGet("info")]
+        [Authorize]
+        public async Task<ActionResult<UserInfoDto>> GetUserInfo()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            if(string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var userInfo = (await _userManager.FindByIdAsync(userId));
+            var result = new UserInfoDto()
+            {
+                Id = userInfo.Id,
+                Email = userInfo.Email,
+                Name = userInfo.FullName,
+                IsGmailConnected = userInfo.IsConnectedGmail,
+            };
+
+            return Ok(result);
+        }
+
     }
 }

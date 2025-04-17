@@ -11,5 +11,7 @@ namespace PersonalFinanceManager.Infrastructure.Repositories
     {
         Task<AppUser> FindByIdAsync(int userId);
         Task<AppUser> FindByEmailAsync(string email);
+
+        Task SaveChangeAsync(AppUser user);
     }
 }
