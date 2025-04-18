@@ -1,4 +1,11 @@
-﻿<form id="reauthorizeForm" method="post" action="@Url.Action("Reauthorize", "AccountManagement")" style="display: none;">
+﻿<style>
+    footer {
+        display: none !important;
+    }
+</style>
+
+
+<form id="reauthorizeForm" method="post" action="@Url.Action("Reauthorize", "AccountManagement")" style="display: none;">
     @Html.AntiForgeryToken()
     <button id="reauthorizeBtn" type="submit" style="display: none;"></button>
 </form>

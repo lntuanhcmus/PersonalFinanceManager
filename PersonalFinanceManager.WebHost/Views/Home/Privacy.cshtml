@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "Chính sách bảo mật";
+}
+
+<div class="container my-5">
+    <h1 class="text-center mb-4 animate__animated animate__fadeIn">Chính sách bảo mật</h1>
+    <div class="card shadow rounded-4 p-4">
+        <div class="card-body">
+            <p class="lead">Tại <strong>FinSnap</strong>, chúng tôi cam kết bảo vệ quyền riêng tư và dữ liệu cá nhân của bạn. Chính sách bảo mật này giải thích cách chúng tôi thu thập, sử dụng, lưu trữ, và bảo vệ thông tin của bạn khi sử dụng ứng dụng.</p>
+
+            <h3 class="mt-4">1. Thông tin chúng tôi thu thập</h3>
+            <p>Chúng tôi thu thập các loại thông tin sau:</p>
+            <ul>
+                <li><strong>Thông tin tài khoản</strong>: Email, mật khẩu (được mã hóa), và thông tin đăng ký khi bạn tạo tài khoản.</li>
+                <li><strong>Dữ liệu giao dịch</strong>: Thông tin giao dịch tài chính được lấy từ Gmail của bạn (nếu bạn kết nối Gmail), bao gồm số tiền, ngày giao dịch, và mô tả.</li>
+                <li><strong>Dữ liệu sử dụng</strong>: Thông tin về cách bạn sử dụng ứng dụng, như lịch sử truy cập, cài đặt, và tương tác với biểu đồ hoặc ngân sách.</li>
+                <li><strong>Thông tin kỹ thuật</strong>: Địa chỉ IP, loại trình duyệt, thiết bị, và hệ điều hành để cải thiện trải nghiệm người dùng.</li>
+            </ul>
+
+            <h3 class="mt-4">2. Cách chúng tôi sử dụng thông tin</h3>
+            <p>Thông tin của bạn được sử dụng để:</p>
+            <ul>
+                <li>Cung cấp và cá nhân hóa dịch vụ, bao gồm quản lý giao dịch, ngân sách, và biểu đồ tài chính.</li>
+                <li>Phân loại giao dịch tự động bằng mô hình học máy (Microsoft.ML) để cung cấp thông tin chi tiết.</li>
+                <li>Gửi thông báo hoặc email hỗ trợ khi cần thiết (nếu bạn đồng ý).</li>
+                <li>Phát hiện và ngăn chặn gian lận, đảm bảo an toàn cho tài khoản của bạn.</li>
+            </ul>
+
+            <h3 class="mt-4">3. Kết nối với Gmail</h3>
+            <p>Ứng dụng sử dụng Google.Apis.Gmail.v1 để truy cập email của bạn nhằm trích xuất giao dịch tài chính. Chúng tôi:</p>
+            <ul>
+                <li>Chỉ truy cập các email liên quan đến giao dịch (ví dụ: hóa đơn, biên lai).</li>
+                <li>Lưu trữ token truy cập an toàn trong cơ sở dữ liệu SQL Server, mã hóa bằng các tiêu chuẩn bảo mật cao.</li>
+                <li>Không lưu trữ nội dung email hoặc thông tin cá nhân không liên quan.</li>
+            </ul>
+
+            <h3 class="mt-4">4. Lưu trữ và bảo vệ dữ liệu</h3>
+            <p>Chúng tôi áp dụng các biện pháp bảo mật sau:</p>
+            <ul>
+                <li>Mã hóa dữ liệu nhạy cảm (mật khẩu, token) trước khi lưu trữ.</li>
+                <li>Sử dụng Entity Framework Core với SQL Server để đảm bảo an toàn cơ sở dữ liệu.</li>
+                <li>Thường xuyên cập nhật hệ thống để vá các lỗ hổng bảo mật.</li>
+                <li>Hạn chế quyền truy cập dữ liệu chỉ cho các quy trình cần thiết (như background job TransactionUpdateJobDb).</li>
+            </ul>
+
+            <h3 class="mt-4">5. Chia sẻ thông tin</h3>
+            <p>Chúng tôi không bán, trao đổi, hoặc chia sẻ thông tin cá nhân của bạn với bên thứ ba, trừ khi:</p>
+            <ul>
+                <li>Có sự đồng ý rõ ràng từ bạn.</li>
+                <li>Yêu cầu bởi luật pháp hoặc cơ quan chức năng.</li>
+            </ul>
+
+            <h3 class="mt-4">6. Quyền của bạn</h3>
+            <p>Bạn có quyền:</p>
+            <ul>
+                <li>Yêu cầu truy cập, chỉnh sửa, hoặc xóa dữ liệu cá nhân của mình.</li>
+                <li>Rút lại quyền truy cập Gmail bất kỳ lúc nào qua trang quản lý tài khoản.</li>
+                <li>Nhận thông báo về bất kỳ vi phạm dữ liệu nào (nếu có).</li>
+            </ul>
+
+            <h3 class="mt-4">7. Liên hệ với chúng tôi</h3>
+            <p>Nếu bạn có câu hỏi về chính sách bảo mật, vui lòng liên hệ:</p>
+            <p><i class="fas fa-envelope"></i> <a href="mailto:support@finsnap.com">support@finsnap.com</a></p>
+
+            <p class="mt-4"><small>Chính sách này được cập nhật lần cuối vào ngày 18/04/2025.</small></p>
+        </div>
+    </div>
+</div>

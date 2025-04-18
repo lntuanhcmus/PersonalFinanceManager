@@ -1,9 +1,8 @@
 ﻿<nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
         <!-- Bên trái: Icon và tên ứng dụng -->
-        <a class="navbar-brand" href="#">
-            <i class="fas fa-wallet"></i>
-            Quản Lý Tài Chính Cá Nhân
+        <a class="navbar-brand" href="/">
+            FinSnap
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -12,17 +11,17 @@
         <!-- Bên phải: Menu -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto align-items-center">
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="DashboardManagement" asp-action="Index">Tổng quan</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="TransactionsManagement" asp-action="Index">Giao dịch</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="BudgetsManagement" asp-action="Index">Ngân Sách</a>
-                </li>
                 @if (User.Identity.IsAuthenticated)
                 {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="DashboardManagement" asp-action="Index">Tổng quan</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="TransactionsManagement" asp-action="Index">Giao dịch</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="BudgetsManagement" asp-action="Index">Ngân Sách</a>
+                    </li>
                     <!-- Dropdown cho avatar -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"

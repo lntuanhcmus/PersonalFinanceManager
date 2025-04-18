@@ -18,7 +18,10 @@ html {
 }
 
 body {
-  margin-bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
 }
 
 .transaction-list .form-group input {
@@ -56,4 +59,14 @@ body {
 /* Đẩy Toastr xuống dưới header */
 .toast-top-right {
     top: 80px !important; /* Cách đỉnh 70px, điều chỉnh theo chiều cao header */
+}
+
+.footer {
+    flex-shrink: 0; /* Ngăn footer bị co lại */
+}
+
+@media (max-width: 576px) {
+    main {
+        padding-bottom: 250px; /* Tăng khoảng cách cho mobile */
+    }
 }

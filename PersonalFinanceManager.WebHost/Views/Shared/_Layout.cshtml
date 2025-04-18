@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="~/PersonalFinanceManager.WebHost.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/footer.css" asp-append-version="true" />
 </head>
 <body>
     <header>
@@ -22,12 +23,10 @@
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            © 2025 - PersonalFinanceManager.WebHost - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
+    <footer>
+        @await Html.PartialAsync("_Footer")
     </footer>
+
     <!-- Modal chung -->
     @await Html.PartialAsync("_ConfirmationModal", "Bạn có chắc muốn thực hiện hành động này?")
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
