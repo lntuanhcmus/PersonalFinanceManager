@@ -148,28 +148,29 @@ RepaymentTransactions.submitEditRepaymentForm = function () {
 };
 
 RepaymentTransactions.deleteRepayment = function (id) {
-    if (!confirm('Bạn có chắc muốn xóa giao dịch hoàn trả này?')) {
-        return;
-    }
-
-    fetch(`/TransactionsManagement/DeleteRepaymentTransaction/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Accept': 'application/json'
+    Utilities.showConfirmationModal(
+        'Bạn có chắc muốn xóa giao dịch hoàn trả này?',
+        function () {
+            fetch(`/TransactionsManagement/DeleteRepaymentTransaction/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text || 'Failed to delete repayment transaction'); });
+                    }
+                    return response.text().then(text => text ? JSON.parse(text) : {});
+                })
+                .then(() => {
+                    toastr.success('Giao dịch hoàn trả đã được xóa thành công');
+                    RepaymentTransactions.fetchRepaymentTransactions(document.getElementById('TransactionId').value);
+                })
+                .catch(error => {
+                    console.error('Error deleting repayment transaction:', error);
+                    toastr.error('Lỗi khi xóa giao dịch hoàn trả: ' + error.message);
+                });
         }
-    })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => { throw new Error(text || 'Failed to delete repayment transaction'); });
-            }
-            return response.text().then(text => text ? JSON.parse(text) : {});
-        })
-        .then(() => {
-            toastr.success('Giao dịch hoàn trả đã được xóa thành công');
-            RepaymentTransactions.fetchRepaymentTransactions(document.getElementById('TransactionId').value);
-        })
-        .catch(error => {
-            console.error('Error deleting repayment transaction:', error);
-            toastr.error('Lỗi khi xóa giao dịch hoàn trả: ' + error.message);
-        });
+    );
 };

@@ -23,13 +23,68 @@ document.addEventListener('DOMContentLoaded', function () {
             var formId = this.getAttribute('data-form-id');
             var form = document.getElementById(formId);
 
-            showConfirmationModal(
+            Utilities.showConfirmationModal(
                 'Bạn có chắc muốn xóa giao dịch này?',
                 function () {
                     form.submit();
                 }
             );
         });
+    });
+
+    const slidePanel = document.getElementById('slidePanel');
+    const closePanelBtn = document.getElementById('closePanel');
+    const transactionDetails = document.getElementById('transactionDetails');
+
+    // Kiểm tra xem các phần tử có tồn tại
+    if (!slidePanel || !closePanelBtn || !transactionDetails) {
+        console.error('Không tìm thấy một hoặc nhiều phần tử: slidePanel, closePanelBtn, closePanelBottomBtn, transactionDetails');
+        return;
+    }
+
+    // Mở panel khi bấm nút "Xem chi tiết"
+    document.querySelectorAll('.view-details').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                const transactionId = btn.dataset.transactionId;
+                const response = await fetch(`/TransactionsManagement/GetTransactionDetails/${transactionId}`);
+                const transaction = await response.json();
+                transactionDetails.innerHTML = `
+                    <li class="list-group-item"><strong>Mã GD:</strong> ${transaction.transactionId}</li>
+                    <li class="list-group-item"><strong>Thời gian:</strong> ${transaction.transactionTime}</li>
+                    <li class="list-group-item"><strong>Nguồn gửi:</strong> ${transaction.sourceAccount}</li>
+                    <li class="list-group-item"><strong>Nguồn nhận:</strong> ${transaction.recipientAccount}</li>
+                    <li class="list-group-item"><strong>Người nhận:</strong> ${transaction.recipientName}</li>
+                    <li class="list-group-item"><strong>Tổng tiền:</strong> ${transaction.amount.toLocaleString('vi-VN')} VND</li>
+                    <li class="list-group-item"><strong>Nội dung:</strong> ${transaction.description}</li>
+                    <li class="list-group-item"><strong>Loại GD:</strong> ${transaction.transactionTypeName}</li>
+                    <li class="list-group-item"><strong>Danh mục:</strong> ${transaction.categoryName}</li>
+                    <li class="list-group-item"><strong>Trạng thái:</strong> ${transaction.status}</li>
+                `;
+                slidePanel.classList.add('open');
+            } catch (error) {
+                console.error('Lỗi khi phân tích dữ liệu giao dịch:', error);
+            }
+        });
+    });
+
+    // Đóng panel khi bấm nút "Đóng" (header)
+    closePanelBtn.addEventListener('click', () => {
+        slidePanel.classList.remove('open');
+    });
+
+    // Đóng panel khi bấm ra ngoài
+    document.addEventListener('click', (e) => {
+        if (slidePanel.classList.contains('open') && !slidePanel.contains(e.target) && !e.target.closest('.view-details')) {
+            slidePanel.classList.remove('open');
+        }
+    });
+
+    // Đóng panel bằng phím ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && slidePanel.classList.contains('open')) {
+            slidePanel.classList.remove('open');
+        }
     });
 });
 
@@ -42,40 +97,6 @@ TransactionManagement.goToPage = function (pageCount) {
     if (page && page >= 1 && page <= pageCount) {
         window.location.href = '@Url.Action("Index", new { transactionId = Model.TransactionId, startDate = Model.StartDate, endDate = Model.EndDate, minAmount = Model.MinAmount, maxAmount = Model.MaxAmount, categoryId = Model.CategoryId, sourceAccount = Model.SourceAccount, content = Model.Content, page = "__page__" })'.replace('__page__', page);
     }
-};
-
-// Custom Confirmation Modal (Bootstrap)
-TransactionManagement.showConfirmationModal = function (message, callback) {
-    var modalHtml = `
-                <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Xác nhận</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                ${message}
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                <button type="button" class="btn btn-danger" id="confirmBtn">Xóa</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    var modal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    modal.show();
-
-    document.getElementById('confirmBtn').addEventListener('click', function () {
-        callback();
-        modal.hide();
-    });
-
-    document.getElementById('confirmModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
-    });
 };
 
 TransactionManagement.exportToExcel = function (url)

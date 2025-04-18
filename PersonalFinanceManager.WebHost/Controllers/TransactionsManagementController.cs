@@ -245,6 +245,26 @@ namespace PersonalFinanceManager.WebHost.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetTransactionDetails(string id)
+        {
+
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.GetAsync($"api/transactionsApi/get-by-id?id={id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                var transaction = JsonConvert.DeserializeObject<TransactionDto>(json);
+                if (transaction != null)
+                {
+                    return Ok(transaction);
+                }
+
+            }
+            return BadRequest("Không tìm thấy giao dịch");
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> EditTransaction(DetailTransactionViewModel model)
         {

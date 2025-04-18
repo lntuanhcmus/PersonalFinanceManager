@@ -5,9 +5,6 @@
 @using X.PagedList.Mvc.Core
 @using X.PagedList.Extensions
 
-
-
-
 <div class="container-fluid py-4">
     <!-- Header Section -->
     <div class="row mb-4 align-items-center">
@@ -27,94 +24,94 @@
         </div>
     </div>
 
-<!-- Search Form -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form asp-action="Index" method="get" id="searchForm">
-            <!-- Hàng 1: 4 trường -->
-            <div class="row g-4 mb-3">
-                <div class="col-md-3">
-                    <label for="transactionId" class="form-label fw-medium">Mã GD:</label>
-                    <input type="text" id="transactionId" name="transactionId" value="@Model.TransactionId" class="form-control" autocomplete="off" />
+    <!-- Search Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get" id="searchForm">
+                <!-- Hàng 1: 4 trường -->
+                <div class="row g-4 mb-3">
+                    <div class="col-md-3">
+                        <label for="transactionId" class="form-label fw-medium">Mã GD:</label>
+                        <input type="text" id="transactionId" name="transactionId" value="@Model.TransactionId" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label fw-medium">Từ ngày:</label>
+                        <input type="text" id="startDate" name="startDate" value="@Model.StartDate" class="form-control flatpickr" placeholder="Chọn ngày" autocomplete="off" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label fw-medium">Đến ngày:</label>
+                        <input type="text" id="endDate" name="endDate" value="@Model.EndDate" class="form-control flatpickr" placeholder="Chọn ngày" autocomplete="off" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="minAmount" class="form-label fw-medium">Số tiền từ:</label>
+                        <input type="number" id="minAmount" name="minAmount" value="@Model.MinAmount" class="form-control" step="any" autocomplete="off" />
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="startDate" class="form-label fw-medium">Từ ngày:</label>
-                    <input type="text" id="startDate" name="startDate" value="@Model.StartDate" class="form-control flatpickr" placeholder="Chọn ngày" autocomplete="off" />
+                <!-- Hàng 2: 4 trường -->
+                <div class="row g-4 mb-3">
+                    <div class="col-md-3">
+                        <label for="maxAmount" class="form-label fw-medium">Đến:</label>
+                        <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control" step="any" autocomplete="off" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="transactionTypeId" class="form-label fw-medium">Loại giao dịch:</label>
+                        <select asp-for="TransactionTypeId" asp-items="Model.TransactionTypes" class="form-control">
+                            <option value="">-- Chọn loại giao dịch --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="categoryId" class="form-label fw-medium">Danh mục:</label>
+                        <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control">
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label fw-medium">Trạng thái:</label>
+                        <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
+                            <option value="">-- Chọn trạng thái --</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="endDate" class="form-label fw-medium">Đến ngày:</label>
-                    <input type="text" id="endDate" name="endDate" value="@Model.EndDate" class="form-control flatpickr" placeholder="Chọn ngày" autocomplete="off" />
+                <!-- Hàng 3: 2 trường và nút -->
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <label for="sourceAccount" class="form-label fw-medium">TK nguồn:</label>
+                        <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="content" class="form-label fw-medium">Nội dung:</label>
+                        <input type="text" id="content" name="content" value="@Model.Content" class="form-control" autocomplete="off" />
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-search me-1"></i> Tìm kiếm</button>
+                        <button type="button" class="btn btn-secondary shadow-sm" onclick="TransactionManagement.resetForm()"><i class="bi bi-x-circle me-1"></i> Xóa bộ lọc</button>
+                        <button type="submit" onclick="TransactionManagement.exportToExcel('@Url.Action("Export", "TransactionsManagement")')" class="btn btn-success shadow-sm export-btn">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất Excel
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="minAmount" class="form-label fw-medium">Số tiền từ:</label>
-                    <input type="number" id="minAmount" name="minAmount" value="@Model.MinAmount" class="form-control" step="any" autocomplete="off" />
-                </div>
-            </div>
-            <!-- Hàng 2: 4 trường -->
-            <div class="row g-4 mb-3">
-                <div class="col-md-3">
-                    <label for="maxAmount" class="form-label fw-medium">Đến:</label>
-                    <input type="number" id="maxAmount" name="maxAmount" value="@Model.MaxAmount" class="form-control" step="any" autocomplete="off" />
-                </div>
-                <div class="col-md-3">
-                    <label for="transactionTypeId" class="form-label fw-medium">Loại giao dịch:</label>
-                    <select asp-for="TransactionTypeId" asp-items="Model.TransactionTypes" class="form-control">
-                        <option value="">-- Chọn loại giao dịch --</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="categoryId" class="form-label fw-medium">Danh mục:</label>
-                    <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control">
-                        <option value="">-- Chọn danh mục --</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="status" class="form-label fw-medium">Trạng thái:</label>
-                    <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
-                        <option value="">-- Chọn trạng thái --</option>
-                    </select>
-                </div>
-            </div>
-            <!-- Hàng 3: 2 trường và nút -->
-            <div class="row g-4">
-                <div class="col-md-3">
-                    <label for="sourceAccount" class="form-label fw-medium">TK nguồn:</label>
-                    <input type="text" id="sourceAccount" name="sourceAccount" value="@Model.SourceAccount" class="form-control" autocomplete="off" />
-                </div>
-                <div class="col-md-3">
-                    <label for="content" class="form-label fw-medium">Nội dung:</label>
-                    <input type="text" id="content" name="content" value="@Model.Content" class="form-control" autocomplete="off" />
-                </div>
-                <div class="col-md-6 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary shadow-sm"><i class="bi bi-search me-1"></i> Tìm kiếm</button>
-                    <button type="button" class="btn btn-secondary shadow-sm" onclick="TransactionManagement.resetForm()"><i class="bi bi-x-circle me-1"></i> Xóa bộ lọc</button>
-                    <button type="submit" onclick="TransactionManagement.exportToExcel('@Url.Action("Export", "TransactionsManagement")')" class="btn btn-success shadow-sm export-btn">
-                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất Excel
-                    </button>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
     <!-- Transactions Table -->
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle">
+                <table class="table table-hover table-striped align-middle" role="grid" aria-describedby="transactions-table-desc">
+                    <caption id="transactions-table-desc" class="visually-hidden">Danh sách các giao dịch tài chính</caption>
                     <thead class="table-dark">
                         <tr>
                             <th scope="col">STT</th>
-                            <th scope="col">Thời gian giao dịch</th>
-                            <th scope="col">Mã giao dịch</th>
-                            <th scope="col">Nguồn gửi</th>
-                            <th scope="col">Nguồn nhận</th>
-                            <th scope="col">Người nhận</th>
+                            <th scope="col">Thời gian</th>
+                            <th scope="col">Mã GD</th>
+                            <th scope="col" class="d-none d-lg-table-cell">Nguồn gửi</th>
+                            <th scope="col" class="d-none d-lg-table-cell">Người nhận</th>
                             <th scope="col">Tổng tiền</th>
                             <th scope="col">Số chi thực</th>
                             <th scope="col">Nội dung</th>
-                            <th scope="col">Loại giao dịch</th>
-                            <th scope="col">Mục đích giao dịch</th>
+                            <th scope="col" class="d-none d-md-table-cell">Loại GD</th>
+                            <th scope="col" class="d-none d-md-table-cell">Danh mục</th>
                             <th scope="col">Trạng thái</th>
                             <th scope="col">Hành động</th>
                         </tr>
@@ -126,18 +123,17 @@
                             foreach (var item in Model.Transactions)
                             {
                                 decimal actualAmt = item.Amount - item.RepaymentAmount;
-                                <tr class="animate__animated animate__fadeIn">
+                                <tr class="transaction-row" data-transaction-id="@item.TransactionId">
                                     <td>@index</td>
                                     <td>@item.TransactionTime</td>
                                     <td>@item.TransactionId</td>
-                                    <td>@item.SourceAccount</td>
-                                    <td>@item.RecipientAccount</td>
-                                    <td>@item.RecipientName</td>
+                                    <td class="d-none d-lg-table-cell">@item.SourceAccount</td>
+                                    <td class="d-none d-lg-table-cell">@item.RecipientName</td>
                                     <td>@item.Amount.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND</td>
                                     <td>@actualAmt.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND</td>
                                     <td>@item.Description</td>
-                                    <td>@item.TransactionTypeName</td>
-                                    <td>@item.CategoryName</td>
+                                    <td class="d-none d-md-table-cell">@item.TransactionTypeName</td>
+                                    <td class="d-none d-md-table-cell">@item.CategoryName</td>
                                     <td>
                                         @switch (item.Status)
                                         {
@@ -156,18 +152,33 @@
                                         }
                                     </td>
                                     <td>
-                                        <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })" class="btn btn-sm btn-primary shadow-sm me-1">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        @if (item.TransactionTypeId == (int)TransactionTypeEnum.Income)
-                                        {
-                                            <form asp-action="DeleteTransaction" method="post" class="d-inline delete-form" id="delete-form-@item.TransactionId">
-                                                <input type="hidden" name="id" value="@item.TransactionId" />
-                                                <button type="button" class="btn btn-sm btn-danger shadow-sm delete-btn" data-form-id="delete-form-@item.TransactionId">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        }
+                                        <div class="btn-group" role="group" aria-label="Hành động giao dịch">
+                                            <a href="@Url.Action("EditTransaction", new { id = item.TransactionId })"
+                                               class="btn btn-sm btn-primary"
+                                               title="Chỉnh sửa"
+                                               aria-label="Chỉnh sửa giao dịch">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-info view-details"
+                                                    data-transaction-id="@item.TransactionId"
+                                                    title="Xem chi tiết"
+                                                    aria-label="Xem chi tiết giao dịch">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            @if (item.TransactionTypeId == (int)TransactionTypeEnum.Income)
+                                            {
+                                                <form asp-action="DeleteTransaction" method="post" class="d-inline delete-form">
+                                                    <input type="hidden" name="id" value="@item.TransactionId" />
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-danger delete-btn"
+                                                            title="Xóa"
+                                                            aria-label="Xóa giao dịch"
+                                                            data-confirm="Bạn có chắc muốn xóa giao dịch @item.TransactionId?">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
                                 index++;
@@ -176,7 +187,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="13" class="text-center text-muted py-4">Không có giao dịch nào</td>
+                                <td colspan="12" class="text-center text-muted py-4">Không có giao dịch nào</td>
                             </tr>
                         }
                     </tbody>
@@ -184,43 +195,73 @@
             </div>
 
             <!-- Pagination -->
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <span class="badge bg-info text-dark">
-                    Hiển thị @Model.PagedTransactions.Count / @Model.PagedTransactions.TotalItemCount giao dịch
-                    (Trang @Model.PagedTransactions.PageNumber / @Model.PagedTransactions.PageCount)
-                </span>
-                <span class="badge bg-success">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-info text-dark">
+                        Hiển thị @Model.PagedTransactions.Count / @Model.PagedTransactions.TotalItemCount giao dịch
+                        (Trang @Model.PagedTransactions.PageNumber / @Model.PagedTransactions.PageCount)
+                    </span>
+                    <span class="badge bg-success">
                         Tổng tiền: @Model.TotalTransactionAmout.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) VND
                     </span>
+                </div>
                 <div class="d-flex align-items-center gap-2">
                     @Html.PagedListPager(Model.PagedTransactions, page => Url.Action("Index", new
-                    {
-                        transactionId = Model.TransactionId,
-                        startDate = Model.StartDate,
-                        endDate = Model.EndDate,
-                        minAmount = Model.MinAmount,
-                        maxAmount = Model.MaxAmount,
-                        categoryId = Model.CategoryId,
-                        sourceAccount = Model.SourceAccount,
-                        content = Model.Content,
-                        page
-                    }),
-                    new PagedListRenderOptions
-                    {
-                        LiElementClasses = new[] { "page-item" },
-                        PageClasses = new[] { "page-link" },
-                        DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
-                        DisplayLinkToNextPage = PagedListDisplayMode.Always,
-                        LinkToPreviousPageFormat = "<i class='bi bi-chevron-left'></i>",
-                        LinkToNextPageFormat = "<i class='bi bi-chevron-right'></i>",
-                        MaximumPageNumbersToDisplay = 5,
-                        DisplayEllipsesWhenNotShowingAllPageNumbers = true
-                    })
+                        {
+                            transactionId = Model.TransactionId,
+                            startDate = Model.StartDate,
+                            endDate = Model.EndDate,
+                            minAmount = Model.MinAmount,
+                            maxAmount = Model.MaxAmount,
+                            categoryId = Model.CategoryId,
+                            sourceAccount = Model.SourceAccount,
+                            content = Model.Content,
+                            page
+                        }), new PagedListRenderOptions
+               {
+                   LiElementClasses = new[] { "page-item" },
+                   PageClasses = new[] { "page-link" },
+                   DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                   DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                   LinkToPreviousPageFormat = "<i class='bi bi-chevron-left'></i>",
+                   LinkToNextPageFormat = "<i class='bi bi-chevron-right'></i>",
+                   MaximumPageNumbersToDisplay = 5,
+                   DisplayEllipsesWhenNotShowingAllPageNumbers = true
+               })
                     <div class="input-group w-auto">
-                        <input type="number" id="goToPage" class="form-control" min="1" max="@Model.PagedTransactions.PageCount" placeholder="Trang" style="width: 80px;" />
-                        <button class="btn btn-outline-primary btn-sm" onclick="goToPage(@Model.PagedTransactions.PageCount)">Đi</button>
+                        <input type="number" id="goToPage"
+                               class="form-control"
+                               min="1"
+                               max="@Model.PagedTransactions.PageCount"
+                               placeholder="Trang"
+                               aria-label="Nhập số trang"
+                               style="width: 80px;" />
+                        <button class="btn btn-outline-primary btn-sm"
+                                onclick="goToPage(@Model.PagedTransactions.PageCount)"
+                                aria-label="Đi đến trang">
+                            Đi
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="slidePanel" class="slide-panel" role="dialog" aria-labelledby="slide-panel-title" tabindex="-1">
+        <div class="slide-panel-header">
+            <h5 id="slide-panel-title">Chi tiết giao dịch</h5>
+            <button id="closePanel" class="btn btn-close" aria-label="Đóng panel">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="slide-panel-body">
+            <div id="loadingSpinner" class="spinner-container" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+            </div>
+            <div id="transactionDetails" class="transaction-details">
+                <!-- Nội dung sẽ được thêm bằng JavaScript -->
             </div>
         </div>
     </div>
@@ -238,6 +279,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" integrity="sha512-z/90a5SWiu4MWVelb5+ny7sAayYUfMmdXKEAbpj27PfdkamNdyI3hcjxPxkOPbrXoKIm7r9V2mElt5f1OtVhqA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Scripts -->
+    <script src="~/js/utilities.js"></script>
     <script src="~/js/transaction-management.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

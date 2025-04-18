@@ -18,22 +18,6 @@
         </div>
     </div>
 
-    <!-- Alerts -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
     <!-- Search Form -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -191,7 +175,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+    <script src="~/js/utilities.js" asp-append-version="true"></script>
     <script>
         // Cấu hình flatpickr
         flatpickr(".flatpickr", {
@@ -218,7 +202,7 @@
             button.addEventListener('click', function () {
                 var formId = this.getAttribute('data-form-id');
                 var form = document.getElementById(formId);
-                showConfirmationModal(
+                Utilities.showConfirmationModal(
                     'Bạn có chắc muốn xóa ngân sách này?',
                     function () {
                         form.submit();

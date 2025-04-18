@@ -36,31 +36,37 @@
     const disconnectButton = document.getElementById('disConnectGmailBtn');
     if (disconnectButton) {
         disconnectButton.addEventListener('click', async function () {
-            const button = this;
-            const spinner = document.getElementById('gmailSpinnerDisconnect');
-            button.disabled = true;
-            spinner.style.display = 'inline-block';
+            Utilities.showConfirmationModal(
+                'Bạn có chắc muốn dừng kết nối với Gmail không?',
+                async function () {
+                    const button = this;
+                    const spinner = document.getElementById('gmailSpinnerDisconnect');
+                    button.disabled = true;
+                    spinner.style.display = 'inline-block';
 
-            try {
-                const response = await fetch('/AccountManagement/DisconnectGmail', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+                    try {
+                        const response = await fetch('/AccountManagement/DisconnectGmail', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || `Lỗi từ server: ${response.status}`);
+                        }
+
+                        // Tải lại trang để cập nhật trạng thái
+                        window.location.reload();
+                    } catch (error) {
+                        alert('Lỗi khi dừng kết nối Gmail: ' + error.message);
+                        button.disabled = false;
+                        spinner.style.display = 'none';
                     }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Lỗi từ server: ${response.status}`);
                 }
-
-                // Tải lại trang để cập nhật trạng thái
-                window.location.reload();
-            } catch (error) {
-                alert('Lỗi khi dừng kết nối Gmail: ' + error.message);
-                button.disabled = false;
-                spinner.style.display = 'none';
-            }
+            );
+            
         });
     }
 });

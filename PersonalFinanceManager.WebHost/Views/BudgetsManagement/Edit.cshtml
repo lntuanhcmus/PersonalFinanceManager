@@ -1,91 +1,142 @@
 ﻿@model PersonalFinanceManager.WebHost.Models.DetailBudgetViewModel
 
-<div class="row mb-3">
-    <div class="col">
-        <h2 class="text-primary">Sửa ngân sách</h2>
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary fw-bold">Sửa ngân sách</h2>
+            <p class="text-muted">Chỉnh sửa thông tin ngân sách để quản lý tài chính hiệu quả.</p>
+        </div>
+        <div class="col text-end">
+            <a asp-action="Index" asp-controller="BudgetsManagement" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+        </div>
     </div>
-    <div class="col text-end">
-        <a asp-action="Index" asp-controller="BudgetsManagement" class="btn btn-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Quay lại
-        </a>
-    </div>
-</div>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-action="Edit" asp-controller="BudgetsManagement" method="post" class="needs-validation" novalidate>
+                <div class="row g-3">
+                    <!-- Category -->
+                    <div class="col-md-6">
+                        <label asp-for="CategoryId" class="form-label fw-medium">Danh mục</label>
+                        <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select" required>
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                        <div class="invalid-feedback">Vui lòng chọn danh mục.</div>
+                    </div>
 
-<div class="card">
-    <div class="card-body">
-        <form asp-action="Edit" asp-controller="BudgetsManagement" method="post">
-            <div class="row">
-                <div class="form-group mb-3 col-md-4">
-                    <label class="form-label">Danh mục</label>
-                    <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control form-control-sm" required>
-                        <option value="">-- Chọn danh mục --</option>
-                    </select>
+                    <!-- Amount -->
+                    <div class="col-md-6">
+                        <label asp-for="Amount" class="form-label fw-medium">Số tiền (VND)</label>
+                        <input asp-for="Amount" class="form-control" type="number" step="1" required placeholder="VD: 5000000" />
+                        <div class="invalid-feedback">Vui lòng nhập số tiền (chỉ nhập số, không cần VND).</div>
+                    </div>
+
+                    <!-- Period -->
+                    <div class="col-md-6">
+                        <label asp-for="Period" class="form-label fw-medium">Chu kỳ</label>
+                        <select asp-for="Period" asp-items="Model.Periods" class="form-select" required>
+                            <option value="">-- Chọn chu kỳ --</option>
+                        </select>
+                        <div class="invalid-feedback">Vui lòng chọn chu kỳ.</div>
+                        </  class="col-md-6">
+                        <label asp-for="StartDate" class="form-label fw-medium">Ngày bắt đầu</label>
+                        <div class="input-group">
+                            <input asp-for="StartDate" asp-format="{0:dd/MM/yyyy}" class="form-control datetimepicker rounded-start" required placeholder="VD: 08/04/2025" />
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar text-primary"></i>
+                            </span>
+                        </div>
+                        <div class="invalid-feedback">Vui lòng chọn ngày bắt đầu.</div>
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col-md-6">
+                        <label asp-for="EndDate" class="form-label fw-medium">Ngày kết thúc (tùy chọn)</label>
+                        <div class="input-group">
+                            <input asp-for="EndDate" asp-format="{0:dd/MM/yyyy}" class="form-control datetimepicker rounded-start" placeholder="VD: 25/04/2025" />
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group mb-3 col-md-4">
-                    <label asp-for="Amount" class="form-label">Số tiền (VND)</label>
-                    <input asp-for="Amount" class="form-control form-control-sm" type="number" required />
-                    <span asp-validation-for="Amount" class="text-danger"></span>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4">Lưu thay đổi</button>
+                    <a asp-action="Index" asp-controller="BudgetsManagement" class="btn btn-outline-secondary px-4">Hủy</a>
                 </div>
-                <div class="form-group mb-3 col-md-4">
-                    <label class="form-label">Chu kỳ</label>
-                    <select asp-for="Period" asp-items="Model.Periods" class="form-control form-control-sm" required>
-                        <option value="">-- Chọn chu kỳ --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group mb-3 col-md-6">
-                    <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
-                    <input asp-for="StartDate" asp-format="{0:dd/MM/yyyy}" class="form-control form-control-sm datetimepicker" placeholder="Ngày bắt đầu VD: 08/04/2025" required />
-                </div>
-                <div class="form-group mb-3 col-md-6">
-                    <label asp-for="EndDate" class="form-label">Ngày kết thúc (tuỳ chọn)</label>
-                    <input asp-for="EndDate" asp-format="{0:dd/MM/yyyy}" class="form-control form-control-sm datetimepicker" placeholder="Ngày kết thúc VD: 25/04/2025" />
-                </div>
-            </div>
-            <div class="row">
-                <div class="col text-end">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-save"></i> Lưu
-                    </button>
-                    <a asp-action="Index" asp-controller="BudgetsManagement" class="btn btn-secondary btn-sm ms-2">
-                        <i class="bi bi-x-circle"></i> Hủy
-                    </a>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <style>
+        .card {
+            border-radius: 10px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #0d6efd;
+                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            }
+
+        .input-group-text {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .btn-primary {
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .btn-outline-secondary {
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .form-label {
+            color: #495057;
+        }
+
+        .alert {
+            border-radius: 8px;
+        }
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            flatpickr('.datetimepicker', {
-                dateFormat: 'd/m/Y',
+            flatpickr(".datetimepicker", {
+                dateFormat: "d/m/Y",
                 allowInput: true,
+                defaultDate: "@Model.StartDate" || "@Model.EndDate",
                 onClose: function (selectedDates, dateStr, instance) {
                     instance.element.value = dateStr;
                 }
+            });
+
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
             });
         });
     </script>
