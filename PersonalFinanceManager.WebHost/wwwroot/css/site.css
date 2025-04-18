@@ -52,3 +52,8 @@ body {
     font-size: 1rem;
     padding: 0.5em 1em;
 }
+
+/* Đẩy Toastr xuống dưới header */
+.toast-top-right {
+    top: 80px !important; /* Cách đỉnh 70px, điều chỉnh theo chiều cao header */
+}

@@ -55,6 +55,7 @@ RepaymentTransactions.submitRepaymentForm = function () {
         data[key] = value;
     });
 
+
     fetch(`/TransactionsManagement/AddRepaymentTransaction`, {
         method: 'POST',
         headers: {
@@ -71,14 +72,26 @@ RepaymentTransactions.submitRepaymentForm = function () {
         })
         .then(() => {
             const modal = bootstrap.Modal.getInstance(document.getElementById('addRepaymentModal'));
+            const openModalButton = document.querySelector('#openAddModal'); // Nút mở modal
+
             modal.hide();
+            document.querySelector('.modal-backdrop')?.remove();
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto'; // Khôi phục <html>
             form.reset();
+            if (openModalButton) {
+                openModalButton.focus(); // Di chuyển focus về nút mở modal
+            } else {
+                document.querySelector('body').focus(); // Hoặc di chuyển focus về body
+            }
             form.classList.remove('was-validated');
+            toastr.success('Thêm giao dịch hoàn trả thành công');
             RepaymentTransactions.fetchRepaymentTransactions(document.getElementById('TransactionId').value);
         })
         .catch(error => {
             console.error('Error creating repayment transaction:', error);
-            alert('Lỗi khi thêm giao dịch hoàn trả: ' + error.message);
+            toastr.error('Thêm giao dịch hoàn trả không thành công')
         });
 };
 
@@ -125,11 +138,12 @@ RepaymentTransactions.submitEditRepaymentForm = function () {
             modal.hide();
             form.reset();
             form.classList.remove('was-validated');
+            toastr.success('Giao dịch hoàn trả đã được cập nhật thành công');
             RepaymentTransactions.fetchRepaymentTransactions(document.getElementById('TransactionId').value);
         })
         .catch(error => {
             console.error('Error updating repayment transaction:', error);
-            alert('Lỗi khi sửa giao dịch hoàn trả: ' + error.message);
+            toastr.error('Giao dịch hoàn trả cập nhật không thành công');
         });
 };
 
@@ -151,10 +165,11 @@ RepaymentTransactions.deleteRepayment = function (id) {
             return response.text().then(text => text ? JSON.parse(text) : {});
         })
         .then(() => {
+            toastr.success('Giao dịch hoàn trả đã được xóa thành công');
             RepaymentTransactions.fetchRepaymentTransactions(document.getElementById('TransactionId').value);
         })
         .catch(error => {
             console.error('Error deleting repayment transaction:', error);
-            alert('Lỗi khi xóa giao dịch hoàn trả: ' + error.message);
+            toastr.error('Lỗi khi xóa giao dịch hoàn trả: ' + error.message);
         });
 };

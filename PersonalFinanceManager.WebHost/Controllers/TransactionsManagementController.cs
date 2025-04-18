@@ -40,7 +40,6 @@ namespace PersonalFinanceManager.WebHost.Controllers
             int? status = null,
             int page = 1)
         {
-
             DateTime? startDateValue = startDate == null ? null : DateTime.ParseExact(startDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
             DateTime? endDateValue = endDate == null ? null : DateTime.ParseExact(endDate, "dd/MM/yyyy", CultureInfo.InvariantCulture);
 
@@ -77,6 +76,8 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 pagedTransactions = new StaticPagedList<TransactionDto>(new List<TransactionDto>(), page, 10, 0);
             }
 
+            
+
             var model = new TransactionsViewModel
             {
                 Transactions = pagedTransactions.ToList(), // Để tương thích với view hiện tại
@@ -95,6 +96,20 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 TransactionTypes = await PopulateTransctionTypes(),
                 Statuses = await PopulateStatuses(),
             };
+            try
+            {
+                response = await client.GetAsync($"api/AccountApi/get-integrations");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var integrations = JsonConvert.DeserializeObject<ExternalIntegrationsDto>(json);
+                    model.Integrations = integrations ?? null;
+                }
+            }
+            catch (Exception ex)
+            {
+                model.Integrations = null;
+            }
 
             return View(model);
         }
@@ -335,7 +350,6 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 var errorObj = JsonConvert.DeserializeObject<dynamic>(json);
                 return BadRequest(errorObj?.error?.ToString() ?? "Lỗi khi cập nhật giao dịch hoàn trả.");
             }
-
             return Ok(JsonConvert.DeserializeObject<object>(json));
         }
 
@@ -362,6 +376,7 @@ namespace PersonalFinanceManager.WebHost.Controllers
             var response = await client.GetAsync("api/transactionsApi/refresh");
             if (response.IsSuccessStatusCode)
             {
+                TempData["Success"] = "Lấy dữ liệu từ Gmail thành công";
                 return RedirectToAction("Index");
             }
             TempData["Error"] = "Lỗi khi lấy giao dịch từ Gmail";

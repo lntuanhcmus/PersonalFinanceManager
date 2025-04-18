@@ -57,6 +57,22 @@ namespace PersonalFinanceManager.WebHost.Controllers
             return View(new LoginDto());
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Reauthorize(string? successMessage)
+        {
+            TempData["Success"] = successMessage;
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public IActionResult Reauthorize()
+        {
+            var successMessage = TempData["Success"] ?? "SuccessMessage";
+            return RedirectToAction("Index", "TransactionsManagement", new { SuccessMessage = successMessage });
+        }
+
         // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -148,6 +164,35 @@ namespace PersonalFinanceManager.WebHost.Controllers
                 }
 
                 // Phân tích kết quả từ API
+                return Ok(json);
+            }
+            catch (HttpRequestException ex)
+            {
+                return StatusCode(500, new { error = $"Lỗi khi gọi API: {ex.Message}" });
+            }
+            catch (JsonException)
+            {
+                return BadRequest(new { error = "Không thể phân tích phản hồi từ API" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DisconnectGmail()
+        {
+            try
+            {
+                // Tạo client HTTP
+                var client = _httpClientFactory.CreateClient("ApiClient");
+
+                var respose = await client.PostAsync("api/accountApi/disconnect-gmail", null);
+
+                var json = await respose.Content.ReadAsStringAsync();
+
+                if (!respose.IsSuccessStatusCode)
+                {
+                    var errorObj = JsonConvert.DeserializeObject<object>(json);
+                    return BadRequest(new { error = errorObj?.ToString() ?? "Lỗi khi dừng kết nối Gmail" });
+                }
                 return Ok(json);
             }
             catch (HttpRequestException ex)

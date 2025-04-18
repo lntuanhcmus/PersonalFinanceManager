@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using PersonalFinanceManager.API.Model;
 using PersonalFinanceManager.API.Services;
+using PersonalFinanceManager.Infrastructure.Repositories;
 using PersonalFinanceManager.Infrastructure.Services;
 
 namespace PersonalFinanceManager.Controllers
@@ -15,6 +16,7 @@ namespace PersonalFinanceManager.Controllers
         private readonly IGmailService _gmailService;
         private readonly TransactionService _transactionService;
         private readonly GmailServiceSettings _gmailSettings;
+        private readonly IUserRepository _userRepository;
 
         private readonly string _credentialPath = "credentials.json";
 
@@ -67,7 +69,7 @@ namespace PersonalFinanceManager.Controllers
                     await _transactionService.SaveTransactions(transactions, Int16.Parse(state));
                     // Chuyển hướng về MVC với trạng thái thành công
                     var successMessage = "Connect to Gmail successfully";
-                    return Redirect($"https://localhost:7204?successMessage={successMessage}");
+                    return Redirect($"https://localhost:7204/AccountManagement/Reauthorize?successMessage={successMessage}");
                 }
                 catch (Exception ex)
                 {

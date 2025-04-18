@@ -46,6 +46,9 @@ namespace PersonalFinanceManager.WebHost.Models
         [JsonPropertyName("totalTransactionAmout")]
         public decimal TotalTransactionAmout { get; set; }
 
+        [JsonPropertyName("externalIntegrationsDto")]
+        public ExternalIntegrationsDto? Integrations { get; set; } = null;
+
         [JsonPropertyName("categories")]
         public List<SelectListItem> Categories { get; set; }
 

@@ -1,0 +1,23 @@
+﻿<script>
+    toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: 'toast-top-right',
+        timeOut: 5000,
+        showMethod: 'fadeIn',
+        hideMethod: 'fadeOut',
+        showDuration: 300,
+        hideDuration: 300
+    };
+
+    $(document).ready(function () {
+    @if (TempData["Success"] != null)
+    {
+        <text>toastr.success('@TempData["Success"]');</text>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <text>toastr.error('@TempData["Error"]');</text>
+    }
+            });
+</script>

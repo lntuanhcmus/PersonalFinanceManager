@@ -80,6 +80,7 @@ TransactionManagement.showConfirmationModal = function (message, callback) {
 
 TransactionManagement.exportToExcel = function (url)
 {
+    event.preventDefault();
     // Thu thập giá trị từ form
     var transactionId = $('#transactionId').val();
     var startDate = $('#startDate').val();
@@ -105,12 +106,14 @@ TransactionManagement.exportToExcel = function (url)
         `&content=${encodeURIComponent(content || '')}`;
 
     // Chuyển hướng đến hành động Export
+    toastr.success("Xuất file Excel thành công");
     window.location.href = url + query;
-    var button = document.querySelector('.export-btn');
     // Khôi phục trạng thái nút sau 5 giây
     setTimeout(function () {
+        var button = document.querySelector('.export-btn');
+
         button.disabled = false;
         button.innerHTML = '<i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất Excel';
-    }, 1000); // 5 giây
+    }, 3000); // 5 giây
 };
 

@@ -288,7 +288,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Budgets");
+                    b.ToTable("Budgets", (string)null);
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.Category", b =>
@@ -312,7 +312,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
 
                     b.HasData(
                         new
@@ -405,7 +405,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ExternalTokens");
+                    b.ToTable("ExternalTokens", (string)null);
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.LabelingRule", b =>
@@ -428,7 +428,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("LabelingRules");
+                    b.ToTable("LabelingRules", (string)null);
 
                     b.HasData(
                         new
@@ -538,7 +538,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.RepaymentTransaction", b =>
@@ -574,7 +574,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("TransactionId");
 
-                    b.ToTable("RepaymentTransactions");
+                    b.ToTable("RepaymentTransactions", (string)null);
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.Transaction", b =>
@@ -634,7 +634,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.TransactionCorrection", b =>
@@ -675,7 +675,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TransactionCorrections");
+                    b.ToTable("TransactionCorrections", (string)null);
                 });
 
             modelBuilder.Entity("PersonalFinanceManager.Shared.Data.TransactionType", b =>
@@ -696,7 +696,7 @@ namespace PersonalFinanceManager.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TransactionTypes");
+                    b.ToTable("TransactionTypes", (string)null);
 
                     b.HasData(
                         new

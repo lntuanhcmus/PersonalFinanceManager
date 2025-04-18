@@ -10,6 +10,7 @@ namespace PersonalFinanceManager.Infrastructure.Repositories
     public interface IUserRepository
     {
         Task<AppUser> FindByIdAsync(int userId);
+
         Task<AppUser> FindByEmailAsync(string email);
 
         Task SaveChangeAsync(AppUser user);

@@ -1,7 +1,4 @@
 ﻿@model PersonalFinanceManager.Shared.Dto.UserInfoDto
-<style>
-
-</style>
 
 <div class="account-container">
     <h2 class="account-title">Thông Tin Tài Khoản</h2>
@@ -14,12 +11,14 @@
     <div class="account-card">
         <div class="card-body">
             <h5 class="info-text">Trạng Thái Kết Nối Gmail</h5>
-            <p class="status-text">Trạng thái: @(Model.IsGmailConnected ? "Đã kết nối" : "Chưa kết nối")</p>
+            <p class="status-text @(Model.IsGmailConnected ? "" : "disconnected")">
+                Trạng thái: @(Model.IsGmailConnected ? "Đã kết nối" : "Chưa kết nối")
+            </p>
             <p class="info-text">Để lấy giao dịch từ Gmail, bạn cần kết nối tài khoản Gmail của mình.</p>
             @if (Model.IsGmailConnected)
             {
                 <button id="disConnectGmailBtn" class="btn disconnect-btn">
-                    <i class="bi bi-envelope"></i> Dừng kết nối Gmail
+                    <i class="bi bi-envelope"></i> Ngắt kết nối Gmail
                     <span id="gmailSpinnerDisconnect" class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
                 </button>
             }

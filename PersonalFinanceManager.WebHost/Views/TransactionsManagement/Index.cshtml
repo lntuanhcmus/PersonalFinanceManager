@@ -5,6 +5,9 @@
 @using X.PagedList.Mvc.Core
 @using X.PagedList.Extensions
 
+
+
+
 <div class="container-fluid py-4">
     <!-- Header Section -->
     <div class="row mb-4 align-items-center">
@@ -15,27 +18,14 @@
             <a href="@Url.Action("AddTransaction")" class="btn btn-success me-2 shadow-sm">
                 <i class="bi bi-plus-circle me-1"></i> Thêm giao dịch
             </a>
-            <a href="@Url.Action("RefreshFromGmail")" class="btn btn-info text-white shadow-sm">
-                <i class="bi bi-arrow-clockwise me-1"></i> Lấy từ Gmail
-            </a>
+            @if (Model.Integrations.IsConnectedGmail)
+            {
+                <a href="@Url.Action("RefreshFromGmail")" class="btn btn-info text-white shadow-sm">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Lấy từ Gmail
+                </a>
+            }
         </div>
     </div>
-
-    <!-- Alerts -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
-            @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
 
 <!-- Search Form -->
 <div class="card shadow-sm mb-4">
@@ -256,15 +246,4 @@
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- Custom JS -->
-    <!-- Modal Closure Logic -->
-    @if (TempData["Success"] != null || TempData["Error"] != null)
-    {
-        <script>
-            var gmailModal = document.getElementById('gmailModal');
-            var modal = bootstrap.Modal.getInstance(gmailModal);
-            if (modal) {
-                modal.hide();
-            }
-        </script>
-    }
 }

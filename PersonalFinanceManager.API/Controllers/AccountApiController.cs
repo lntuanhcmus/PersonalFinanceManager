@@ -8,6 +8,7 @@ using PersonalFinanceManager.Infrastructure.Services;
 using PersonalFinanceManager.Shared.Data;
 using PersonalFinanceManager.Shared.Dto;
 using System.Security.Claims;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace PersonalFinanceManager.API.Controllers
 {
@@ -32,6 +33,7 @@ namespace PersonalFinanceManager.API.Controllers
             _signInManager = signInManager;
             _userTokenService = userTokenService;
             _externalTokenService = externalTokenService;
+            _userRepository = userRepository;
 
         }
 
@@ -127,6 +129,46 @@ namespace PersonalFinanceManager.API.Controllers
             };
 
             return Ok(result);
+        }
+
+        [HttpPost("disconnect-gmail")]
+        [Authorize]
+        public async Task<IActionResult> DisconnectGmail()
+        {
+            try
+            {
+                int userId = Int16.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var user = (await _userRepository.FindByIdAsync(userId));
+
+                user.IsConnectedGmail = false;
+
+                await _userRepository.SaveChangeAsync(user);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("get-integrations")]
+        [Authorize]
+        public async Task<ActionResult<ExternalIntegrationsDto>> GetIntegrations()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var user = (await _userManager.FindByIdAsync(userId));
+
+                var result = new ExternalIntegrationsDto() { IsConnectedGmail = user.IsConnectedGmail, };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Lỗi khi gọi API: {ex.Message}" });
+            }
         }
 
     }
