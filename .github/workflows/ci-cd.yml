@@ -21,7 +21,7 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
       - name: Restore dependencies
-        run: dotnet restore FinSnap.sln
+        run: dotnet restore PersonalFinanceManager.sln
       - name: Build API
         run: dotnet build PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-restore
       - name: Build WebHost
