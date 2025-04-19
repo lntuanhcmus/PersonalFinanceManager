@@ -1,4 +1,3 @@
-```yaml
 name: CI for FinSnap
 on:
   push:
