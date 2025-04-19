@@ -1,4 +1,3 @@
-```yaml
 name: CI-CD for FinSnap
 on:
   push:
@@ -70,4 +69,3 @@ jobs:
             cd PersonalFinanceManager.Infrastructure
             dotnet ef database update
           EOF
-```
