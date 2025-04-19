@@ -6,3 +6,6 @@ token.json
 .vs
 
 .vscode
+appsettings.Development.json
+appsettings.Staging.json
+.env

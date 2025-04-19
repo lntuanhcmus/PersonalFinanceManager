@@ -1,13 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using PersonalFinanceManager.WebHost.Handlers;
+using PersonalFinanceManager.WebHost.Models;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Đăng ký ApiSettings với IOptions
+builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("ApiSettings"));
+
 // Thêm dịch vụ localization
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -33,12 +39,13 @@ builder.Services.AddControllersWithViews();
 // Add IHttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
-// Configure HttpClient for API calls
-builder.Services.AddHttpClient("ApiClient", client =>
+// Đăng ký HttpClient sử dụng ApiSettings
+builder.Services.AddHttpClient("ApiClient", (sp, client) =>
 {
-    client.BaseAddress = new Uri("http://localhost:8000/");
+    var settings = sp.GetRequiredService<IOptions<ApiSettings>>().Value;
+    client.BaseAddress = new Uri(settings.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
 }).AddHttpMessageHandler<BearerTokenHandler>();
 
 // Add BearerTokenHandler as a service

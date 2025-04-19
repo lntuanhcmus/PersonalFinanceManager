@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using PersonalFinanceManager.API.Extensions;
 using PersonalFinanceManager.API.Model;
 using System.Globalization;
@@ -27,7 +28,7 @@ var app = builder.Build();
 // Sử dụng CORS trước các middleware khác
 app.UseCors("AllowUI");
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -37,9 +38,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-// Cấu hình chạy trên port 8000 HTTP
-app.Urls.Add("http://localhost:8000");
-
+app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
 app.Run();
 
