@@ -52,6 +52,7 @@ jobs:
           API_DB_CONNECTION_STRING: ${{ secrets.API_DB_CONNECTION_STRING }}
           WEB_DB_CONNECTION_STRING: ${{ secrets.WEB_DB_CONNECTION_STRING }}
           DB_SA_PASSWORD: ${{ secrets.DB_SA_PASSWORD }}
+          KESTREL_CERT_PASSWORD: ${{ secrets.KESTREL_CERT_PASSWORD }}
         run: |
           ssh -T -p 24700 root@103.72.96.116 << 'EOF'
             cd ~/finsnap/PersonalFinanceManager
