@@ -7,5 +7,4 @@ token.json
 
 .vscode
 appsettings.Development.json
-appsettings.Staging.json
 .env
