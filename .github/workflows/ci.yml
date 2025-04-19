@@ -1,4 +1,5 @@
-name: CI for FinSnap
+```yaml
+name: CI-CD for FinSnap
 on:
   push:
     branches: [ main, develop ]
@@ -40,4 +41,33 @@ jobs:
         run: dotnet publish PersonalFinanceManager.Scheduler/PersonalFinanceManager.Scheduler.csproj --configuration Release --no-build --output ./PersonalFinanceManager.Scheduler/bin/Release/net8.0/publish
       - name: Build Docker images
         run: docker-compose -f docker-compose.yml build
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Deploy to VPS
+        env:
+          API_DB_CONNECTION_STRING: ${{ secrets.API_DB_CONNECTION_STRING }}
+          WEB_DB_CONNECTION_STRING: ${{ secrets.WEB_DB_CONNECTION_STRING }}
+          DB_SA_PASSWORD: ${{ secrets.DB_SA_PASSWORD }}
+        run: |
+          ssh root@<cloud-ip> << 'EOF'
+            cd ~/finsnap/<repo-name>
+            git pull origin main
+            echo "API_DB_CONNECTION_STRING=$API_DB_CONNECTION_STRING" > .env
+            echo "WEB_DB_CONNECTION_STRING=$WEB_DB_CONNECTION_STRING" >> .env
+            echo "DB_SA_PASSWORD=$DB_SA_PASSWORD" >> .env
+            docker-compose down
+            docker-compose up -d --build
+            dotnet tool install --global dotnet-ef
+            export PATH="$PATH:/root/.dotnet/tools"
+            cd PersonalFinanceManager.Infrastructure
+            dotnet ef database update
+          EOF
 ```
