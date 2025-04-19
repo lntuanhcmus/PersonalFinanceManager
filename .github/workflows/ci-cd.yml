@@ -26,8 +26,6 @@ jobs:
         run: dotnet build PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-restore
       - name: Build WebHost
         run: dotnet build PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-restore
-      - name: Build Scheduler
-        run: dotnet build PersonalFinanceManager.Scheduler.Host/PersonalFinanceManager.Scheduler.Host.csproj --configuration Release --no-restore
       - name: Publish API
         run: dotnet publish PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-build --output ./PersonalFinanceManager.API/bin/Release/net8.0/publish
       - name: Publish WebHost
