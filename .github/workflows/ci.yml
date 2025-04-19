@@ -1,9 +1,10 @@
+```yaml
 name: CI for FinSnap
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -13,12 +14,31 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
-      - name: Build Docker images
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v3
+      - name: Install Docker Compose
         run: |
-          docker-compose -f docker-compose.yml build
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+      - name: Restore dependencies
+        run: dotnet restore FinSnap.sln
+      - name: Build API
+        run: dotnet build PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-restore
+      - name: Build WebHost
+        run: dotnet build PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-restore
+      - name: Build Scheduler
+        run: dotnet build PersonalFinanceManager.Scheduler/PersonalFinanceManager.Scheduler.csproj --configuration Release --no-restore
+      - name: Test API
+        run: dotnet test PersonalFinanceManager.Tests/PersonalFinanceManager.Tests.csproj --no-build --verbosity normal --filter "Category=API"
+      - name: Test WebHost
+        run: dotnet test PersonalFinanceManager.Tests/PersonalFinanceManager.Tests.csproj --no-build --verbosity normal --filter "Category=WebHost"
+      - name: Publish API
+        run: dotnet publish PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-build --output ./PersonalFinanceManager.API/bin/Release/net8.0/publish
+      - name: Publish WebHost
+        run: dotnet publish PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --output ./PersonalFinanceManager.WebHost/bin/Release/net8.0/publish
+      - name: Publish Scheduler
+        run: dotnet publish PersonalFinanceManager.Scheduler/PersonalFinanceManager.Scheduler.csproj --configuration Release --no-build --output ./PersonalFinanceManager.Scheduler/bin/Release/net8.0/publish
+      - name: Build Docker images
+        run: docker-compose -f docker-compose.yml build
+```
