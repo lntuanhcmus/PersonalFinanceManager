@@ -48,7 +48,7 @@ jobs:
           WEB_DB_CONNECTION_STRING: ${{ secrets.WEB_DB_CONNECTION_STRING }}
           DB_SA_PASSWORD: ${{ secrets.DB_SA_PASSWORD }}
         run: |
-          ssh root@103.72.96.116 << 'EOF'
+          ssh -p 24700 root@103.72.96.116 << 'EOF'
             cd ~/finsnap/PersonalFinanceManager
             git pull origin main
             echo "API_DB_CONNECTION_STRING=$API_DB_CONNECTION_STRING" > .env
