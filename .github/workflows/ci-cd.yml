@@ -63,6 +63,6 @@ jobs:
             docker-compose up -d --build
             dotnet tool install --global dotnet-ef
             export PATH="$PATH:/root/.dotnet/tools"
-            cd PersonalFinanceManager.Infrastructure
+            cd PersonalFinanceManager.API
             dotnet ef database update
           EOF
