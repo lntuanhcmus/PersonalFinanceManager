@@ -35,15 +35,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
       - ConnectionStrings__DefaultConnection=${WEB_DB_CONNECTION_STRING}
-      - ASPNETCORE_URLS=https://+:7204
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/certs/aspnetapp.pfx
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=${KESTREL_CERT_PASSWORD}
+      - ASPNETCORE_URLS=http://+:7204
     depends_on:
       - api
       - db
     mem_limit: 400m
-    volumes:
-      - ./PersonalFinanceManager.WebHost/certs:/app/certs:ro
     networks:
       - pfm-network
 
