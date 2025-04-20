@@ -18,4 +18,6 @@ RUN dotnet publish "PersonalFinanceManager.API.csproj" -c Release -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN mkdir -p /app/logs/PersonalFinanceManager && chmod -R 777 /app/logs
+ENV ASPNETCORE_URLS=http://+:8000
 ENTRYPOINT ["dotnet", "PersonalFinanceManager.API.dll"]

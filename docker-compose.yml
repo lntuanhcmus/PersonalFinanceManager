@@ -8,8 +8,17 @@ services:
       - "8000:8000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
+      - OAuth__RedirectUri=http://103.72.96.116:8000/api/GmailApi/callback
       - ASPNETCORE_URLS=http://+:8000
       - ConnectionStrings__DefaultConnection=${API_DB_CONNECTION_STRING}
+      - Serilog__MinimumLevel__Default=Information
+    volumes:
+      - ./logs:/app/logs # Ánh xạ thư mục logs ra host
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       - db
     mem_limit: 300m
