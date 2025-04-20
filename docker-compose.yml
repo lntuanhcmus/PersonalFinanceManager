@@ -42,7 +42,7 @@ services:
       - db
     mem_limit: 400m
     volumes:
-      - ./certs:/app/certs:ro
+      - ./PersonalFinanceManager.WebHost/certs:/app/certs:ro
     networks:
       - pfm-network
 
