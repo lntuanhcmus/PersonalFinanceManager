@@ -22,6 +22,8 @@ services:
     depends_on:
       - db
     mem_limit: 300m
+    volumes:
+      - ./PersonalFinanceManager.API/credentitals.json:/app/credentitals.json:ro
     networks:
       - pfm-network
 

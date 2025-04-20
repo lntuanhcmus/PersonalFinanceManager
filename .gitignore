@@ -8,4 +8,4 @@ token.json
 .vscode
 appsettings.Development.json
 .env
-/logs
+**/logs/
