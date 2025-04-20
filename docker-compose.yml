@@ -43,7 +43,6 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${DB_SA_PASSWORD}
       - MSSQL_PID=Express
-    mem_limit: 800m
     ports:
       - "11433:1433"
     volumes:
