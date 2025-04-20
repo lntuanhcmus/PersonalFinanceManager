@@ -12,6 +12,7 @@ services:
       - ConnectionStrings__DefaultConnection=${API_DB_CONNECTION_STRING}
     depends_on:
       - db
+    mem_limit: 300m
     networks:
       - pfm-network
 
@@ -30,6 +31,7 @@ services:
     depends_on:
       - api
       - db
+    mem_limit: 400m
     volumes:
       - ./certs:/app/certs:ro
     networks:
@@ -41,6 +43,7 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${DB_SA_PASSWORD}
       - MSSQL_PID=Express
+    mem_limit: 800m
     ports:
       - "11433:1433"
     volumes:
