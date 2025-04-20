@@ -14,6 +14,7 @@ services:
       - Serilog__MinimumLevel__Default=Information
     volumes:
       - ./logs:/app/logs # Ánh xạ thư mục logs ra host
+      - ./PersonalFinanceManager.API/credentials.json:/app/credentials.json:ro
     logging:
       driver: "json-file"
       options:
@@ -22,8 +23,6 @@ services:
     depends_on:
       - db
     mem_limit: 300m
-    volumes:
-      - ./PersonalFinanceManager.API/credentials.json:/app/credentials.json:ro
     networks:
       - pfm-network
 
