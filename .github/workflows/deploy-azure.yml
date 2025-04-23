@@ -9,29 +9,45 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src # Thư mục làm việc mặc định là src
     steps:
     # Check out the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
-    
+
+    # In thư mục làm việc để debug
+      - name: Print working directory
+        run: pwd
+
+    # Liệt kê file để kiểm tra
+      - name: List files in src
+        run: ls -R
+
     # Setup .NET SDK on Ubuntu
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-    
+
     # Restore dependencies
       - name: Restore Dependencies
-        run: dotnet restore .\PersonalFinanceManager.WebHost\PersonalFinanceManager.WebHost.csproj
+        run: dotnet restore PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj
 
     # Build the application
+      - name: Build Application
+        run: dotnet build PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-restore
+
+    # Publish the application
       - name: Publish Application
-        run: dotnet publish .\PersonalFinanceManager.WebHost\PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ./publish
-    
+        run: dotnet publish PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ../publish
+        # Output vào ../publish để đặt thư mục publish ở root của repository
+
     # Deploy to Azure App Service
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: finsnap-webhost
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_TEST }}
-          package: ./publish
+          package: ./publish # Đường dẫn từ root của repository
