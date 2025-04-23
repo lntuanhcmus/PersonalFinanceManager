@@ -1,0 +1,37 @@
+name: Deploy to Azure App Service (Testing)
+
+on:
+  push:
+    branches:
+      - azure/hosting
+  workflow_dispatch:
+
+jobs:
+  build and deploy:
+    runs-on: ubuntu-latest
+    steps:
+    # Check out the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+    
+    # Setup .NET SDK on Ubuntu
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+    
+    # Restore dependencies
+      - name: Restore Dependencies
+        run: dotnet restore src/PersonalFinanceManager.WebHost.csproj
+
+    # Build the application
+      - name: Publish Application
+        run: dotnet publish src/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ./publish
+    
+    # Deploy to Azure App Service
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: finsnap-webhost
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_TEST }}
+          package: ./publish
