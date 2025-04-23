@@ -17,14 +17,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-    # In thư mục làm việc để debug
-      - name: Print working directory
-        run: pwd
-
-    # Liệt kê file để kiểm tra
-      - name: List files in src
-        run: ls -R
-
     # Setup .NET SDK on Ubuntu
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
