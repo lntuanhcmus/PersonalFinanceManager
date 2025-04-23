@@ -22,11 +22,11 @@ jobs:
     
     # Restore dependencies
       - name: Restore Dependencies
-        run: dotnet restore src/PersonalFinanceManager.WebHost.csproj
+        run: dotnet restore PersonalFinanceManager.WebHost.csproj
 
     # Build the application
       - name: Publish Application
-        run: dotnet publish src/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ./publish
+        run: dotnet publish PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ./publish
     
     # Deploy to Azure App Service
       - name: Deploy to Azure Web App
