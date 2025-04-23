@@ -9,13 +9,18 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src # Thư mục làm việc mặc định là src
     steps:
     # Check out the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+    # In thư mục làm việc để debug
+      - name: Print working directory
+        run: pwd
+
+    # Liệt kê file từ root để kiểm tra
+      - name: List files in repository
+        run: ls -R
 
     # Setup .NET SDK on Ubuntu
       - name: Setup .NET SDK
@@ -33,8 +38,7 @@ jobs:
 
     # Publish the application
       - name: Publish Application
-        run: dotnet publish PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ../publish
-        # Output vào ../publish để đặt thư mục publish ở root của repository
+        run: dotnet publish PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ./publish
 
     # Deploy to Azure App Service
       - name: Deploy to Azure Web App
@@ -42,4 +46,4 @@ jobs:
         with:
           app-name: finsnap-webhost
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_TEST }}
-          package: ./publish # Đường dẫn từ root của repository
+          package: ./publish
