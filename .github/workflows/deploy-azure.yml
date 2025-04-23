@@ -44,6 +44,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: finsnap-webhost
+          app-name: pfm-webhost
           publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_TEST }}
           package: ./publish
