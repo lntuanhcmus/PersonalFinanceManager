@@ -32,7 +32,7 @@ jobs:
       - name: Restore Dependencies
         run: |
           dotnet restore PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj
-          dotnet restore PersonalFinanceManager.WebHost/PersonalFinanceManager.API.csproj
+          dotnet restore PersonalFinanceManager.API/PersonalFinanceManager.API.csproj
 
       # Build the WebHost application
       - name: Build Application WebHost
@@ -40,7 +40,7 @@ jobs:
 
       # Build the WebAPI application
       - name: Build Application API
-        run: dotnet build PersonalFinanceManager.WebHost/PersonalFinanceManager.API.csproj --configuration Release --no-restore
+        run: dotnet build PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-restore
 
       # Publish the WebHost application
       - name: Publish Application WebHost
@@ -48,7 +48,7 @@ jobs:
 
       # Publish the WebAPI application
       - name: Publish Application WebAPI
-        run: dotnet publish PersonalFinanceManager.WebHost/PersonalFinanceManager.API.csproj --configuration Release --no-build --no-restore --output ./publish-webapi
+        run: dotnet publish PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-build --no-restore --output ./publish-webapi
 
       # Deploy WebHost to Azure App Service
       - name: Deploy to Azure Web App (pfm-webhost)
