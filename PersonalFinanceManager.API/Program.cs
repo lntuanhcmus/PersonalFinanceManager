@@ -48,11 +48,8 @@ var app = builder.Build();
 // Sử dụng CORS trước các middleware khác
 app.UseCors("AllowUI");
 
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 //app.UseHttpsRedirection();
 app.UseAuthentication();
