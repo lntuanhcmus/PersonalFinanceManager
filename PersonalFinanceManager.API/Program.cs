@@ -41,6 +41,8 @@ builder.Services
     .AddCorsPolicy()
     .AddJwtAuthentication(builder.Configuration);
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 
 
 var app = builder.Build();

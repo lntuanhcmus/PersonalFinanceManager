@@ -21,20 +21,22 @@ namespace PersonalFinanceManager.API.Controllers
         private readonly IUserTokenService _userTokenService;
         private readonly IExternalTokenService _externalTokenService;
         private readonly IUserRepository _userRepository;
+        private readonly ILogger<AccountApiController> _logger;
 
         public AccountApiController(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             IUserTokenService userTokenService,
             IExternalTokenService externalTokenService,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ILogger<AccountApiController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _userTokenService = userTokenService;
             _externalTokenService = externalTokenService;
             _userRepository = userRepository;
-
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -65,12 +67,21 @@ namespace PersonalFinanceManager.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
+            // Log khi request đi vào action
+            _logger.LogInformation("Login request received for email: {Email}", model.Email);
+
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for login request: {Errors}", ModelState);
                 return BadRequest(ModelState);
+            }
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !user.IsActive)
+            {
+                _logger.LogWarning("Login failed: Invalid email or account inactive for email: {Email}", model.Email);
                 return Unauthorized("Invalid email or account is inactive.");
+            }
 
             // Sử dụng SignInManager để đăng nhập
             var result = await _signInManager.PasswordSignInAsync(user.UserName ?? user.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
@@ -82,9 +93,11 @@ namespace PersonalFinanceManager.API.Controllers
 
                 // Tạo token JWT
                 var token = await _userTokenService.GenerateTokenAsync(user);
+                _logger.LogInformation("Login successful for email: {Email}", model.Email);
                 return Ok(token);
             }
 
+            _logger.LogWarning("Login failed: Invalid email or password for email: {Email}", model.Email);
             return Unauthorized("Invalid email or password.");
         }
 
