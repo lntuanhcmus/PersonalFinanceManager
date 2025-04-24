@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using PersonalFinanceManager.API.Extensions;
 using PersonalFinanceManager.API.Model;
 using Serilog;
