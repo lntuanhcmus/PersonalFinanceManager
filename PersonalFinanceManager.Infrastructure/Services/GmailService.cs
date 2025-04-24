@@ -141,26 +141,34 @@ namespace PersonalFinanceManager.Infrastructure.Services
 
         private async Task<UserCredential> GetCredentialAsync(string credentialsPath, TokenResponse token, string userId)
         {
-            using var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read);
-            var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
-            var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+            try
             {
-                ClientSecrets = clientSecrets,
-                Scopes = Scopes
-            });
+                using var stream = new FileStream(credentialsPath, FileMode.Open, FileAccess.Read);
+                var clientSecrets = GoogleClientSecrets.FromStream(stream).Secrets;
+                var flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+                {
+                    ClientSecrets = clientSecrets,
+                    Scopes = Scopes
+                });
 
-            var credential = new UserCredential(flow, userId, token);
-            if (credential.Token.IsExpired(flow.Clock))
-            {
-                if (string.IsNullOrEmpty(token.RefreshToken))
-                    throw new Exception("Refresh token không tồn tại, yêu cầu người dùng xác thực lại");
+                var credential = new UserCredential(flow, userId, token);
+                if (credential.Token.IsExpired(flow.Clock))
+                {
+                    if (string.IsNullOrEmpty(token.RefreshToken))
+                        throw new Exception("Refresh token không tồn tại, yêu cầu người dùng xác thực lại");
 
-                await credential.RefreshTokenAsync(CancellationToken.None);
-                var newToken = credential.Token.ToExternalToken(_provider);
-                newToken.UserId = int.Parse(userId); // Chuyển từ string sang int
-                await _tokenService.SaveTokenAsync(newToken);
+                    await credential.RefreshTokenAsync(CancellationToken.None);
+                    var newToken = credential.Token.ToExternalToken(_provider);
+                    newToken.UserId = int.Parse(userId); // Chuyển từ string sang int
+                    await _tokenService.SaveTokenAsync(newToken);
+                }
+                return credential;
             }
-            return credential;
+            catch (Exception ex)
+            {
+
+                throw;
+            }
         }
 
         private async Task<List<GMService.Data.Message>> GetMessagesAsync(GMService.GmailService service, int maxResult)

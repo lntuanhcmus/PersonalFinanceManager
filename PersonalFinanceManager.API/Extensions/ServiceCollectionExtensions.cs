@@ -35,6 +35,7 @@ namespace PersonalFinanceManager.API.Extensions
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
+            services.AddSingleton<IQueueService, AzureQueueService>();
 
             services.AddScoped<IGmailService, GmailService>();
             services.AddScoped<IExternalTokenService, ExternalTokenService>();

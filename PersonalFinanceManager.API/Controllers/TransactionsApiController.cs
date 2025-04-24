@@ -12,6 +12,8 @@ using PersonalFinanceManager.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace PersonalFinanceManager.Controllers
 {
@@ -25,19 +27,28 @@ namespace PersonalFinanceManager.Controllers
         private readonly CategoryService _categoryService;
         private readonly GmailServiceSettings _gmailSettings;
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<TransactionsApiController> _logger;
+        private readonly IQueueService _queueService;
 
 
         public TransactionsApiController(IGmailService gmailService,
                                          TransactionService transactionService,
                                          CategoryService categoryService,
                                          IOptions<GmailServiceSettings> gmailOptions,
-                                         IMapper mapper)
+                                         IMapper mapper,
+                                         ILogger<TransactionsApiController> logger,
+                                         IConfiguration configuration,
+                                         IQueueService queueService)
         {
             _gmailService = gmailService;
             _transactionService = transactionService;
             _categoryService = categoryService;
             _gmailSettings = gmailOptions.Value;
             _mapper = mapper;
+            _logger = logger;
+            _configuration = configuration;
+            _queueService = queueService;
         }
 
         [HttpGet]
@@ -203,15 +214,43 @@ namespace PersonalFinanceManager.Controllers
 
                 var transactions = await _gmailService.ExtractTransactionsAsync(userId, userCredential, 10);
 
-                await _transactionService.SaveTransactions(transactions, int.Parse(userId));
+                if(transactions == null || !transactions.Any())
+                {
+                    _logger.LogInformation("No transactions found for user {UserId}", userId);
+                    return Ok("No new transactios found");
+                }
 
-                return Ok();
+                bool queueEnabled = _configuration.GetValue<bool>("AzureQueue:Enabled", false);
+                if(queueEnabled)
+                {
+                    foreach (var transaction in transactions)
+                    {
+                        try
+                        {
+                            var json = JsonConvert.SerializeObject(transaction); // Bước 1: convert thành JSON string
+                            var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(json)); // Bước 2: encode base64
+                            await _queueService.SendMessageAsync(base64);
+                            _logger.LogInformation("Queued transaction for user {UserId}: {TransactionId}", userId, transaction.TransactionId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to queue transaction {TransactionId} for user {UserId}", transaction.TransactionId, userId);
+                        }
+                    }
+                }
+                else
+                {
+                    await _transactionService.SaveTransactions(transactions, int.Parse(userId));
+                    _logger.LogInformation("Saved {TransactionCount} transactions directly for user {UserId}", transactions.Count, userId);
+                }
+
+                return Ok("Transactions processed successfully");
             }
             catch (Exception ex)
             {
-                return BadRequest();
+                _logger.LogError(ex, "Error refreshing transaction for user");
+                return BadRequest("Failed to process transactions");
             }
         }
-
     }
 }
