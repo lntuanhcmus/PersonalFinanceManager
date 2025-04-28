@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using PersonalFinanceManager.API.Extensions;
 using PersonalFinanceManager.API.Model;
 using Serilog;
@@ -41,6 +39,8 @@ builder.Services
     .AddCorsPolicy()
     .AddJwtAuthentication(builder.Configuration);
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 
 
 var app = builder.Build();
@@ -48,11 +48,8 @@ var app = builder.Build();
 // Sử dụng CORS trước các middleware khác
 app.UseCors("AllowUI");
 
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 //app.UseHttpsRedirection();
 app.UseAuthentication();

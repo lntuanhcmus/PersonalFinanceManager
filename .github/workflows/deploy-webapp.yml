@@ -1,0 +1,89 @@
+name: Deploy to Azure App Service (Testing)
+
+on:
+  push:
+    branches:
+      - feature/PFM_16_Create_Azure_Function
+  workflow_dispatch:
+
+jobs:
+  setup-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Print working directory to debug
+      - name: Print working directory
+        run: pwd
+
+      # List files in repository to verify
+      - name: List files in repository
+        run: ls -R
+
+      # Login to Azure CLI
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Install Azure CLI and GitHub CLI
+      - name: Install Azure CLI and GitHub CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      # Run deploy.sh to setup Azure resources and secrets
+      - name: Setup Azure Resources
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo $GITHUB_TOKEN | gh auth login --with-token
+          chmod +x deploy-ci.sh
+          ./deploy-ci.sh
+
+      # Setup .NET SDK on Ubuntu
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restore dependencies
+      - name: Restore Dependencies
+        run: |
+          dotnet restore PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj
+          dotnet restore PersonalFinanceManager.API/PersonalFinanceManager.API.csproj
+
+      # Build the WebHost application
+      - name: Build Application WebHost
+        run: dotnet build PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-restore
+
+      # Build the WebAPI application
+      - name: Build Application API
+        run: dotnet build PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-restore
+
+      # Publish the WebHost application
+      - name: Publish Application WebHost
+        run: dotnet publish PersonalFinanceManager.WebHost/PersonalFinanceManager.WebHost.csproj --configuration Release --no-build --no-restore --output ./publish-webhost
+
+      # Publish the WebAPI application
+      - name: Publish Application WebAPI
+        run: dotnet publish PersonalFinanceManager.API/PersonalFinanceManager.API.csproj --configuration Release --no-build --no-restore --output ./publish-webapi
+
+      # Deploy WebHost to Azure App Service
+      - name: Deploy to Azure Web App (pfm-webhost)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: pfm-webhost
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_WEBHOST }}
+          package: ./publish-webhost
+
+      # Deploy WebAPI to Azure App Service
+      - name: Deploy to Azure Web App (pfm-webapi)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: pfm-webapi
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_WEBAPI }}
+          package: ./publish-webapi

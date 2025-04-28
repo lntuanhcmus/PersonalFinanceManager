@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonalFinanceManager.Sche
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonalFinanceManager.Sheduler.Host", "PersonalFinanceManager.Sheduler.Host\PersonalFinanceManager.Sheduler.Host.csproj", "{D860E3B0-AC83-455F-8B97-07A8F94B5CBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalFinanceManager.Infrastructure", "PersonalFinanceManager.Infrastructure\PersonalFinanceManager.Infrastructure.csproj", "{61F42FC5-9295-4A5F-A23B-A842AFD39DBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonalFinanceManager.Infrastructure", "PersonalFinanceManager.Infrastructure\PersonalFinanceManager.Infrastructure.csproj", "{61F42FC5-9295-4A5F-A23B-A842AFD39DBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalFinanceManager.Functions", "PersonalFinanceManager.Functions\PersonalFinanceManager.Functions.csproj", "{2F358C45-101E-4532-B183-6128662464AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{61F42FC5-9295-4A5F-A23B-A842AFD39DBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61F42FC5-9295-4A5F-A23B-A842AFD39DBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61F42FC5-9295-4A5F-A23B-A842AFD39DBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F358C45-101E-4532-B183-6128662464AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F358C45-101E-4532-B183-6128662464AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F358C45-101E-4532-B183-6128662464AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F358C45-101E-4532-B183-6128662464AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

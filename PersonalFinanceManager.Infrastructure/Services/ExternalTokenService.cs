@@ -15,8 +15,10 @@ namespace PersonalFinanceManager.Infrastructure.Services
         public async Task<ExternalToken> GetTokenAsync(string provider, string userEmail)
         {
             return await _dbContext.ExternalTokens
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(t => t.Provider == provider && t.UserEmail == userEmail);
+                .AsNoTracking()
+                .Where(t => t.Provider == provider && t.UserEmail == userEmail)
+                .OrderByDescending(t => t.IssuedUtc)
+                .FirstOrDefaultAsync();
         }
 
         public async Task SaveTokenAsync(ExternalToken token)
