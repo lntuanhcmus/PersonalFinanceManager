@@ -23,42 +23,43 @@ namespace PersonalFinanceManager.Functions
             _logger = logger;
         }
 
-        [Function("ProcessTransaction")]
-        public async Task Run([QueueTrigger("transaction-queue", Connection = "AzureWebJobsStorage")] string message)
-        {
-            try
+            [Function("ProcessTransaction")]
+            public async Task Run([QueueTrigger("transaction-queue", Connection = "AzureWebJobsStorage")] string message)
             {
-                var transaction = JsonConvert.DeserializeObject<Transaction>(
-    Encoding.UTF8.GetString(Convert.FromBase64String(message.Trim('"'))));
-
-                _logger.LogInformation("Processing transaction for user {UserId}: {TransactionId}", transaction.TransactionId, transaction.UserId);
-
-                // Check duplicate
-                var existingTransaction = await _dbContext.Transactions
-                        .FirstOrDefaultAsync(t => t.TransactionId == transaction.TransactionId);
-                if (existingTransaction != null)
+                _logger.LogInformation("Start process transaction");
+                try
                 {
-                    _logger.LogWarning("Transaction {TransactionId} already exists, skipping",
-                        transaction.TransactionId);
-                    return;
+                    var transaction = JsonConvert.DeserializeObject<Transaction>(
+        Encoding.UTF8.GetString(Convert.FromBase64String(message.Trim('"'))));
+
+                    _logger.LogInformation("Processing transaction for user {UserId}: {TransactionId}", transaction.TransactionId, transaction.UserId);
+
+                    // Check duplicate
+                    var existingTransaction = await _dbContext.Transactions
+                            .FirstOrDefaultAsync(t => t.TransactionId == transaction.TransactionId);
+                    if (existingTransaction != null)
+                    {
+                        _logger.LogWarning("Transaction {TransactionId} already exists, skipping",
+                            transaction.TransactionId);
+                        return;
+                    }
+
+                    // Phân loại giao dịch
+                    await ClassifyTransactionAsync(transaction);
+
+                    // Lưu vào database
+                    _dbContext.Transactions.Add(transaction);
+                    await _dbContext.SaveChangesAsync();
+
+                    _logger.LogInformation("Transaction saved: {TransactionId}, CategoryId: {CategoryId}, TransactionTypeId: {TransactionTypeId}",
+                        transaction.TransactionId, transaction.CategoryId, transaction.TransactionTypeId);
                 }
-
-                // Phân loại giao dịch
-                await ClassifyTransactionAsync(transaction);
-
-                // Lưu vào database
-                _dbContext.Transactions.Add(transaction);
-                await _dbContext.SaveChangesAsync();
-
-                _logger.LogInformation("Transaction saved: {TransactionId}, CategoryId: {CategoryId}, TransactionTypeId: {TransactionTypeId}",
-                    transaction.TransactionId, transaction.CategoryId, transaction.TransactionTypeId);
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing transaction from queue");
+                    throw; // Để queue retry
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing transaction from queue");
-                throw; // Để queue retry
-            }
-        }
 
         private async Task ClassifyTransactionAsync(Transaction transaction)
         {

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  setup-and-deploy:
     runs-on: ubuntu-latest
     steps:
       # Check out the repository
@@ -21,6 +21,28 @@ jobs:
       # List files in repository to verify
       - name: List files in repository
         run: ls -R
+
+      # Login to Azure CLI
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Install Azure CLI and GitHub CLI
+      - name: Install Azure CLI and GitHub CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      # Run deploy.sh to setup Azure resources and secrets
+      - name: Setup Azure Resources
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo $GITHUB_TOKEN | gh auth login --with-token
+          chmod +x deploy-ci.sh
+          ./deploy-ci.sh
 
       # Setup .NET SDK on Ubuntu
       - name: Setup .NET SDK
